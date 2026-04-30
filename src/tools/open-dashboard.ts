@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import { safeErrorMessage } from "../lib/errors.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 
 export const meta: ToolMeta = {
@@ -45,6 +46,7 @@ export function registerOpenDashboard(server: McpServer, deps: Deps): void {
         "Open the interactive map + weather dashboard. On MCP Apps hosts (Claude, ChatGPT) the UI renders inline; " +
         "on hosts without MCP Apps support a structured text summary is returned instead. Read-only.",
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(meta.name),
       _meta: {
         "openai/widgetAccessible": true,
         "openai/outputTemplate": DASHBOARD_URI,

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { safeErrorMessage } from "../lib/errors.js";
 import { enforceSizeCap } from "../lib/tool-size.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 import { FarmlandSearchResultSchema } from "../types/farmland.js";
 
@@ -54,6 +55,7 @@ export function registerSearchFarmland(server: McpServer, deps: Deps): void {
         "Search Japanese farmland (eMAFF Fude polygons) by address, prefecture, municipality, or registered crop. " +
         "Read-only. Returns up to 100 polygons per call with a `nextCursor` for pagination.",
       inputSchema: baseSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

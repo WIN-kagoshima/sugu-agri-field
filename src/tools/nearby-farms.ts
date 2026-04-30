@@ -4,6 +4,7 @@ import { safeErrorMessage } from "../lib/errors.js";
 import { isValidLatLng } from "../lib/geo.js";
 import { enforceSizeCap } from "../lib/tool-size.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 import { FarmlandSearchResultSchema } from "../types/farmland.js";
 
@@ -40,6 +41,7 @@ export function registerNearbyFarms(server: McpServer, deps: Deps): void {
         "Return eMAFF farmland polygons whose centroid lies within `radiusMeters` of the given (lat, lng). " +
         "Useful for planning routes between fields and for finding nearby dispatch sites. Read-only.",
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

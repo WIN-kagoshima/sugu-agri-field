@@ -2,6 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ZodObject, ZodRawShape, ZodTypeAny, z } from "zod";
 import { safeErrorMessage } from "../../lib/errors.js";
 import type { Deps } from "../../server/deps.js";
+import { getToolAnnotations } from "../../server/surface-catalog.js";
 
 export interface AppOnlyHandlerResult {
   content?: Array<{ type: "text"; text: string }>;
@@ -38,6 +39,7 @@ export function registerAppOnlyTool<S extends ZodRawShape>(
       title: options.title,
       description: options.description,
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(name),
       _meta: {
         "ui/visibility": ["app"],
         "openai/widgetAccessible": true,

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { safeErrorMessage } from "../lib/errors.js";
 import { enforceSizeCap } from "../lib/tool-size.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 import { AreaSummarySchema } from "../types/farmland.js";
 
@@ -43,6 +44,7 @@ export function registerAreaSummary(server: McpServer, deps: Deps): void {
       description:
         "Aggregate eMAFF farmland statistics for a prefecture or municipality: total fields, total area in hectares, top registered crops. Read-only.",
       inputSchema: baseSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

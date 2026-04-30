@@ -3,6 +3,7 @@ import { z } from "zod";
 import { elicitForm } from "../elicitation/form.js";
 import { safeErrorMessage } from "../lib/errors.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 
 export const meta: ToolMeta = {
@@ -47,6 +48,7 @@ export function registerCreateStaffDeployPlan(server: McpServer, deps: Deps): vo
         "If `farmRegion` or `periodDays` is missing, the server uses a Form-mode elicitation to ask the user. " +
         "Returns a textual plan plus structured data; nothing is persisted or sent.",
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

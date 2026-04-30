@@ -3,6 +3,7 @@ import { z } from "zod";
 import type { JmaWarning } from "../adapters/_interface.js";
 import { safeErrorMessage } from "../lib/errors.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 
 export const meta: ToolMeta = {
@@ -52,6 +53,7 @@ export function registerGetWeatherWarning(server: McpServer, deps: Deps): void {
         "treat the result as real-time. The `attribution` string MUST be cited when surfacing data to " +
         "end users. Read-only.",
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

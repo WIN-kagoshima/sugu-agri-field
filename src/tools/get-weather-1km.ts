@@ -3,6 +3,7 @@ import { z } from "zod";
 import { ValidationError, safeErrorMessage } from "../lib/errors.js";
 import { isValidLatLng } from "../lib/geo.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 import { WeatherForecastSchema } from "../types/weather.js";
 
@@ -53,6 +54,7 @@ export function registerGetWeather1km(server: McpServer, deps: Deps): void {
         "plus an `attribution` string that MUST be quoted when surfacing the data to end users. " +
         "Read-only and idempotent; safe to retry.",
       inputSchema: inputSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);

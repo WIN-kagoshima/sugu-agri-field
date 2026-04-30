@@ -1,0 +1,37 @@
+# SuguAgriField MCP — CODEOWNERS
+#
+# Rules in this file are matched in order; the LAST matching pattern wins
+# for a given path. Keep most-specific rules at the bottom.
+#
+# References:
+#   https://docs.github.com/en/repositories/managing-your-repositories-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default reviewer for everything
+*                               @WIN-kagoshima
+
+# MCP spec-touching code MUST be reviewed by a maintainer who knows the
+# spec, not just JavaScript.
+/src/server/                    @WIN-kagoshima
+/src/server/well-known.ts       @WIN-kagoshima
+/src/server/surface-catalog.ts  @WIN-kagoshima
+/src/tools/                     @WIN-kagoshima
+/src/prompts/                   @WIN-kagoshima
+/src/resources/                 @WIN-kagoshima
+/tests/conformance/             @WIN-kagoshima
+
+# Security-sensitive code: token store, OAuth flow, HTTP transport
+/src/auth/                      @WIN-kagoshima
+/src/server/transport-http.ts   @WIN-kagoshima
+/src/server/connect-handler.ts  @WIN-kagoshima
+/SECURITY.md                    @WIN-kagoshima
+
+# Data licence + Japanese regulatory compliance (気象業務法 etc.)
+/docs/data-license.md           @WIN-kagoshima
+/src/adapters/weather/          @WIN-kagoshima
+/NOTICE                         @WIN-kagoshima
+
+# Release & infra
+/.github/workflows/             @WIN-kagoshima
+/Dockerfile                     @WIN-kagoshima
+/cloudbuild.yaml                @WIN-kagoshima
+/docs/runbook.md                @WIN-kagoshima

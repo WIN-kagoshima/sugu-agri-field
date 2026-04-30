@@ -38,6 +38,7 @@ export function buildServerCard(options: WellKnownOptions): Record<string, unkno
         sideEffect: meta.sideEffect,
         introduced: meta.introduced,
         visibility: meta.visibility,
+        annotations: meta.annotations,
       };
     });
 

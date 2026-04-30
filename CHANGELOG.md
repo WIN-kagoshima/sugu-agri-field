@@ -8,6 +8,15 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ## [Unreleased]
 
+### Added — MCP Spec 2025-11-25 §6.10 ToolAnnotations
+- Every registered tool now exposes the official `ToolAnnotations` block (`readOnlyHint`, `idempotentHint`, `openWorldHint`, `destructiveHint`) on `tools/list`, so MCP hosts can correctly decide whether to require user confirmation before invocation.
+- `src/server/surface-catalog.ts` is the single source of truth: each tool entry carries an `annotations` field plus three reusable presets (`READ_ONLY`, `READ_ONLY_REMOTE`, `DRAFT_NON_IDEMPOTENT`).
+- `getToolAnnotations(name)` helper throws if the catalog and registration drift apart.
+- `tests/conformance/tool-annotations.test.ts` (3 new tests) verifies that (a) every live tool advertises a complete annotations object, (b) hints agree with the internal `sideEffect` classification, and (c) `openWorldHint=true` exactly for tools that touch the network (Open-Meteo, JMA).
+- The Server Card (`/.well-known/mcp-server.json`) now embeds annotations alongside `sideEffect`, so registries see the same hints clients see.
+- `.github/CODEOWNERS` for spec-touching code, security paths, data-licence files, and infra.
+- `.github/FUNDING.yml` placeholder.
+
 ### Added — production sidecars
 - **Graceful shutdown** (`src/server/lifecycle.ts`): SIGTERM triggers a 8 s drain window. `/healthz` flips to 503 once draining. Inflight requests get to finish before the listening socket closes, matching Cloud Run's 10 s grace period.
 - **Per-IP token-bucket rate limiter** (`src/server/rate-limit.ts`): `/mcp` is bounded by `SUGU_RATE_RPS` / `SUGU_RATE_BURST`. Rejected requests return JSON-RPC error `-32429`, `Retry-After`, and `X-RateLimit-Limit` / `X-RateLimit-Remaining`.

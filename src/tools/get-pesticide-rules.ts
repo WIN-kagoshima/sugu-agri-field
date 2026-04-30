@@ -3,6 +3,7 @@ import { z } from "zod";
 import { safeErrorMessage } from "../lib/errors.js";
 import { enforceSizeCap } from "../lib/tool-size.js";
 import type { Deps } from "../server/deps.js";
+import { getToolAnnotations } from "../server/surface-catalog.js";
 import type { ToolMeta } from "../types/common.js";
 import { PesticideQueryResultSchema } from "../types/pesticide.js";
 
@@ -47,6 +48,7 @@ export function registerGetPesticideRules(server: McpServer, deps: Deps): void {
         "Search Japanese pesticide registrations (FAMIC) by crop, pest/disease, or active ingredient. " +
         "Returns registration numbers, products, application limits, and pre-harvest intervals. Read-only.",
       inputSchema: baseSchema.shape,
+      annotations: getToolAnnotations(meta.name),
     },
     async (raw: unknown) => {
       const parsed = inputSchema.safeParse(raw);
