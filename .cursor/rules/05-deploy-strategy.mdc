@@ -1,0 +1,40 @@
+---
+description: Deployment — Cloud Run, Streamable HTTP, headers, health checks
+globs: Dockerfile, cloudbuild.yaml, .github/workflows/**/*.yml, src/server/**/*.ts
+---
+
+# Deployment
+
+## Target
+
+Google Cloud Run, region `asia-northeast1`, scale-to-zero. The HTTP transport is **Streamable HTTP** in **stateless** mode (`simpleStatelessStreamableHttp.ts` pattern from `modelcontextprotocol/typescript-sdk`).
+
+Why stateless: scale-to-zero containers cannot retain in-memory session state across cold starts. Stateless transport plus client-side `Mcp-Session-Id` is the documented production pattern.
+
+## Container
+
+- Multi-stage Dockerfile.
+- Final stage is a minimal Node 20 distroless image (`gcr.io/distroless/nodejs20-debian12:nonroot`).
+- The `snapshots/*.sqlite` files are baked in at build time (or downloaded from GCS in the build step) so the runtime needs no write filesystem.
+- Image must run as a non-root user.
+
+## HTTP server hardening
+
+- `@modelcontextprotocol/express` (or its Node.js variant) wires Host header validation.
+- DNS rebinding protection enabled on `StreamableHTTPServerTransport`.
+- CORS allowlist: production origins only.
+- Body size limit: 1 MiB.
+- `GET /healthz` returns `{ status: "ok", version }` for Cloud Run liveness/readiness probes.
+- `Mcp-Protocol-Version` and `Mcp-Session-Id` headers handled per spec.
+
+## Secrets
+
+- No secret in the container image.
+- Open-Meteo (no key) and FAMIC are public.
+- WAGRI / paid sources are NOT in this OSS deployment. If added, store in Secret Manager and mount at runtime.
+
+## CI/CD
+
+- `.github/workflows/ci.yml` runs `lint + typecheck + test` on every push and PR.
+- `.github/workflows/deploy.yml` (manual `workflow_dispatch`) builds and deploys to Cloud Run using Workload Identity Federation. No long-lived service account keys.
+- Tag a release (`v0.x.y`) → `release.yml` publishes to npm.

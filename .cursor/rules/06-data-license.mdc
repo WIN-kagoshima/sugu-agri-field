@@ -1,0 +1,38 @@
+---
+description: Data licensing — required for every data adapter
+globs: src/adapters/**/*.ts, scripts/build-snapshots/**/*.ts, docs/data-license.md, .well-known/mcp-server.json
+---
+
+# Data licensing
+
+Every data source has a license. Adapters MUST respect it at runtime, and `docs/data-license.md` MUST be updated before merging.
+
+## In-scope sources (Phase 0–5)
+
+| Source | License | Redistribution | Caching | Attribution |
+|---|---|---|---|---|
+| Open-Meteo | CC-BY 4.0 | Allowed | 1 hour cache | "Weather data by Open-Meteo.com (CC-BY 4.0)" in tool output |
+| eMAFF Fude | Public open data | Allowed (snapshot built locally; not bundled in npm package) | OK | "Source: 農林水産省 eMAFF 筆ポリゴン" |
+| FAMIC pesticide | Public open data | Allowed | OK | "Source: FAMIC 農薬登録情報" |
+| JMA disaster XML | Japan Meteorological Business Act | Conditional | Short cache only (≤10 min) | "気象庁 + 発表時刻 + 改変有無" |
+
+## Out-of-scope sources
+
+- WAGRI — member agreement, **redistribution prohibited**, only allowed via Phase 7+ adapter that reads tokens from the user's own account. Do not commit any WAGRI sample data to this repo.
+- Sentinel-2 / SAGRI — out of scope for this OSS release.
+
+## Adapter contract
+
+- Every adapter returns an `attribution: string` field in its result type.
+- The tool layer copies `attribution` into `structuredContent.attribution` so the LLM can quote it.
+- The MCP Apps UI shows the attribution near the data it represents.
+
+## When you add a data source
+
+1. Confirm license in writing.
+2. Add the row to `docs/data-license.md`.
+3. Add the entry to `.well-known/mcp-server.json` `data_sources`.
+4. Implement the adapter with `attribution` populated.
+5. Add a unit test that the attribution is non-empty.
+
+PRs missing any of the four steps will be closed.

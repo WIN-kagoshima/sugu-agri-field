@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report (private)
+    url: https://github.com/WIN-kagoshima/sugu-agri-field/blob/main/SECURITY.md
+    about: Do NOT report security issues publicly. Use the channel described in SECURITY.md.
+  - name: MCP specification questions
+    url: https://modelcontextprotocol.io/specification/latest
+    about: Spec compliance questions belong in the upstream spec repo.
+  - name: Cursor / Claude / ChatGPT host bugs
+    url: https://github.com/modelcontextprotocol
+    about: Host-side bugs (e.g. Cursor cannot connect) are tracked upstream.

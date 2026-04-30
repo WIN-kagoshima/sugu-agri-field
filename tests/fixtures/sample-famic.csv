@@ -1,0 +1,4 @@
+registration_id,product_name,active_ingredients,target_crops,target_pests,application_method,pre_harvest_interval_days,max_applications_per_season,registration_date,expires_at
+"R-2026-001","スターガード乳剤","スターガード","さつまいも|サトウキビ","アブラムシ類|コナガ","散布",7,3,"2024-04-01","2029-03-31"
+"R-2026-002","シルバーキングDF","ダイファルス|シプロコナゾール","茶","炭疽病|ハダニ類","散布",14,2,"2023-09-15","2028-09-14"
+"R-2026-003","ゴールドリッチ粒剤","プロチオホス","米","ウンカ類","散布",30,1,"2024-01-10","2029-01-09"

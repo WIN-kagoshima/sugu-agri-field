@@ -1,0 +1,105 @@
+{
+  "name": "@sugukuru/sugu-agri-field",
+  "version": "0.5.0",
+  "description": "SuguAgriField MCP server — Japanese agricultural land + weather + pesticide data for SSW workforce dispatching. Reference implementation of MCP Spec 2025-11-25 + MCP Apps Extension 2026-01-26.",
+  "type": "module",
+  "license": "Apache-2.0",
+  "author": "Sugukuru Inc.",
+  "homepage": "https://github.com/WIN-kagoshima/sugu-agri-field",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WIN-kagoshima/sugu-agri-field.git"
+  },
+  "bugs": {
+    "url": "https://github.com/WIN-kagoshima/sugu-agri-field/issues"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  },
+  "main": "./dist/server.js",
+  "bin": {
+    "sugu-agri-field": "./dist/server.js"
+  },
+  "files": [
+    "dist/**/*.js",
+    "dist/**/*.d.ts",
+    "dist/ui/dashboard.html",
+    "snapshots/README.md",
+    "LICENSE",
+    "NOTICE",
+    "README.md",
+    "README.ja.md",
+    "CHANGELOG.md",
+    "SECURITY.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.build.json",
+    "build:ui": "vite build && node -e \"require('node:fs').copyFileSync('dist/ui/index.html','dist/ui/dashboard.html')\"",
+    "build:all": "npm run build && npm run build:ui",
+    "dev": "tsx watch server.ts --stdio",
+    "dev:http": "tsx watch server.ts --http",
+    "start": "node dist/server.js",
+    "start:http": "node dist/server.js --http",
+    "lint": "biome check .",
+    "lint:fix": "biome check --apply .",
+    "format": "biome format --write .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:smoke": "vitest run tests/smoke",
+    "test:conformance": "vitest run tests/conformance",
+    "test:ui": "playwright test",
+    "snapshots:build": "tsx scripts/build-snapshots/index.ts",
+    "inspector": "npx @modelcontextprotocol/inspector node dist/server.js --stdio",
+    "deploy": "gcloud run deploy sugu-agri-field --source . --region asia-northeast1 --min-instances 0 --max-instances 10 --memory 512Mi --cpu 1 --concurrency 80 --timeout 60s --allow-unauthenticated",
+    "prepack": "npm run build:all",
+    "prepublishOnly": "npm run lint && npm run typecheck && npm test"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.29.0",
+    "@modelcontextprotocol/ext-apps": "^1.7.1",
+    "better-sqlite3": "^11.5.0",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.21.2",
+    "zod": "^3.25.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^1.9.4",
+    "@modelcontextprotocol/inspector": "^0.13.0",
+    "@playwright/test": "^1.49.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/cookie-parser": "^1.4.7",
+    "@types/express": "^5.0.0",
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.0",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.0",
+    "maplibre-gl": "^4.7.0",
+    "msw": "^2.6.0",
+    "react": "^18.3.0",
+    "react-dom": "^18.3.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "vite": "^6.0.0",
+    "vite-plugin-singlefile": "^2.0.3",
+    "vitest": "^2.1.8"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "agriculture",
+    "japan",
+    "weather",
+    "pesticide",
+    "farmland",
+    "ssw",
+    "specified-skilled-worker",
+    "claude",
+    "cursor",
+    "chatgpt",
+    "mcp-apps"
+  ],
+  "publishConfig": {
+    "access": "public"
+  }
+}

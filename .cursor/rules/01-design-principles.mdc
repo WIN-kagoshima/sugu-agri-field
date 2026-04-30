@@ -1,0 +1,21 @@
+---
+description: MCP official 8 design principles applied to SuguAgriField
+alwaysApply: true
+---
+
+# MCP design principles in this project
+
+The official `community/design-principles` lists 8 principles. Use this table whenever you have to choose between two implementations. The principle wins.
+
+| Principle | Concrete rule in this repo |
+|---|---|
+| **Convergence over choice** | Data source switching happens behind one Adapter interface. WAGRI / Open-Meteo / JMA are not separate tools; they all live behind `WeatherAdapter`. Tool surface stays `get_weather_1km`. |
+| **Composability over specificity** | Build only with `tools` / `resources` / `prompts` / MCP Apps UI. Do not invent a custom MCP primitive. |
+| **Interoperability over optimization** | Use capability negotiation. Elicitation, tasks, and MCP Apps UI must have a working fallback for clients that do not support them. |
+| **Stability over velocity** | Once a tool name or argument is published, do not break it. Add a new tool and deprecate. The `experimental` flag is set by `version < 1.0.0`. |
+| **Capability over compensation** | Do not add hidden "hint" tools to compensate for an LLM's current limits. If the model gets it wrong on a parsable Japanese address, that is the model's job to improve. |
+| **Demonstration over deliberation** | Phase 0 is intentionally a 1-week MVP. Ship it before debating Phase 7. |
+| **Pragmatism over purity** | Open-Meteo first, WAGRI later. CC-BY attribution string in tool output is fine; do not block release on a perfect license dialog. |
+| **Standardization over innovation** | Follow `examples/basic-host`, `examples/server`, `examples/map-server` from `modelcontextprotocol/typescript-sdk` and `modelcontextprotocol/ext-apps`. Do not invent a UI framework. |
+
+When two principles conflict, **Stability** wins for already-published tools, **Capability over compensation** wins for new feature design, and **Pragmatism** wins for everything else.

@@ -1,0 +1,98 @@
+---
+description: MCP tool design rules — apply when creating or editing tools
+globs: src/tools/**/*.ts
+---
+
+# MCP tool design rules
+
+## Naming
+
+- snake_case verb_noun: `search_farmland`, `get_weather_1km`, `get_pesticide_rules`.
+- Avoid vague verbs (`run`, `do`, `query`) and noun-only names (`farmland`).
+- Once a tool name appears in a published version (CHANGELOG.md), it is **frozen**. Add a new tool and deprecate.
+
+## Input schema (Zod)
+
+- Required arguments ≤ 3 unless justified.
+- Every argument has a `.describe()` written for the LLM, full sentence.
+- Use enums for closed sets, `z.number().int().min().max()` for bounded ints.
+- Pagination: `limit` (default 20, max 100) and `cursor` (opaque string).
+- Use `z.object({...}).strict()` so unknown fields are rejected.
+
+## Visibility
+
+- `model-visible` (default): tools the LLM should consider during reasoning.
+- `visibility: ["app"]` (Phase 5): tools called only by the MCP Apps UI; the LLM should not see them.
+- Aim for ~7 model-visible tools and ≥7 app-only tools. Too many model-visible tools burns context.
+
+## Side-effect classification
+
+Each tool file exports `meta.sideEffect`:
+
+- `read-only` — safe to call repeatedly; no external irreversible effect.
+- `draft` — produces a non-committed artefact; explicit user step needed to commit.
+- `mutating` — changes state somewhere; must include audit log + operation id in output.
+- `destructive` — deletes / cancels / sends. Two-step (`prepare_*` + `confirm_*`) required.
+
+## Output
+
+- `content` MUST contain at least one `text` entry, written for the LLM (a 1–3 sentence summary).
+- `structuredContent` is the machine-readable shape, validated by an output Zod schema.
+- For paginated tools, include `next_cursor` in `structuredContent`.
+- For UI-driven tools, include `_meta.openWidget = "ui://sugu-agri/<name>.html"` and a textual fallback in `content`.
+- Always include the data source attribution (`structuredContent.attribution`) when that is required by the source license.
+
+## Errors
+
+- Validation: `{ isError: true, content: [{ type: "text", text: "Invalid <field>: <reason>" }] }`. Never throw.
+- Upstream / not-found / auth: throw a typed error from `src/lib/errors.ts`; the registry layer maps it to a JSON-RPC error.
+
+## Example tool skeleton
+
+```ts
+import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { Deps } from "../server/deps.js";
+
+export const meta = {
+  name: "search_farmland",
+  sideEffect: "read-only",
+  visibility: "model" as const,
+};
+
+export const searchFarmlandInputSchema = z
+  .object({
+    query: z.string().describe("Address, place name, or farm operator name."),
+    prefecture: z.string().optional().describe("Two-character prefecture code (e.g. JP-46)."),
+    limit: z.number().int().min(1).max(100).default(20),
+    cursor: z.string().optional(),
+  })
+  .strict();
+
+export function registerSearchFarmland(server: McpServer, deps: Deps) {
+  server.registerTool(
+    "search_farmland",
+    {
+      title: "Search Japanese farmland",
+      description: "Search eMAFF Fude polygons by address, prefecture or operator name. Read-only.",
+      inputSchema: searchFarmlandInputSchema.shape,
+    },
+    async (args) => {
+      const parsed = searchFarmlandInputSchema.safeParse(args);
+      if (!parsed.success) {
+        return {
+          isError: true,
+          content: [
+            { type: "text", text: `Invalid input: ${parsed.error.issues[0]?.message ?? "unknown"}` },
+          ],
+        };
+      }
+      const result = await deps.emaff.search(parsed.data);
+      return {
+        content: [{ type: "text", text: `${result.fields.length} farmland match(es).` }],
+        structuredContent: result,
+      };
+    },
+  );
+}
+```

@@ -1,0 +1,30 @@
+---
+description: Test strategy — Vitest + Inspector + Playwright
+globs: tests/**/*.ts, tests/**/*.tsx, src/**/*.test.ts
+---
+
+# Test strategy
+
+## Levels
+
+| Level | Path | Tool | Purpose |
+|---|---|---|---|
+| Unit | `tests/unit` or `src/**/*.test.ts` | Vitest | adapters, lib helpers |
+| Schema | `tests/unit/schema` | Vitest | round-trip Zod input/output |
+| Smoke | `tests/smoke` | Vitest + SDK `Client` | start server, list tools, call one happy + one error |
+| Conformance | `tests/conformance` | Vitest | JSON-RPC 2.0 shape, capability negotiation |
+| MCP Apps UI | `tests/ui` | Playwright | iframe sandbox renders, empty/error states |
+
+## Hard requirements
+
+- External APIs (Open-Meteo etc.) are mocked with **MSW** in unit tests. No real network calls.
+- The `tests/smoke` suite spawns the server in-process and connects with `Client`. Both stdio and Streamable HTTP must be smoke-tested.
+- Inspector smoke: `npx @modelcontextprotocol/inspector --cli node dist/server.js --stdio` is run in CI on push.
+- Every tool needs at minimum: 1 happy-path test, 1 invalid-input test (validation error path), 1 upstream-failure test.
+- Secret leakage check: `pnpm test` greps the test output for `process.env` value patterns and fails the run if found.
+
+## Determinism
+
+- Time-dependent tests use `vi.setSystemTime`.
+- Random IDs are seeded.
+- SQLite snapshot tests use a fixture DB committed under `tests/fixtures/` (small, ≤200 rows).

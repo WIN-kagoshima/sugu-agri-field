@@ -1,0 +1,53 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "field_id": "K46-0001-0001",
+        "polygon_id": "P-46-0001-0001",
+        "prefecture_code": "JP-46",
+        "city_code": "46201",
+        "address": "鹿児島県霧島市国分中央",
+        "area_m2": 12500.5,
+        "registered_crop": "さつまいも"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [130.7625, 31.7350]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "field_id": "K46-0001-0002",
+        "polygon_id": "P-46-0001-0002",
+        "prefecture_code": "JP-46",
+        "city_code": "46201",
+        "address": "鹿児島県霧島市国分清水",
+        "area_m2": 8200.0,
+        "registered_crop": "茶"
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [[[130.770, 31.740], [130.775, 31.740], [130.775, 31.745], [130.770, 31.745], [130.770, 31.740]]]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "field_id": "K46-0002-0001",
+        "polygon_id": "P-46-0002-0001",
+        "prefecture_code": "JP-46",
+        "city_code": "46221",
+        "address": "鹿児島県伊佐市大口",
+        "area_m2": 22300.0,
+        "registered_crop": "米"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [130.6175, 32.0560]
+      }
+    }
+  ]
+}

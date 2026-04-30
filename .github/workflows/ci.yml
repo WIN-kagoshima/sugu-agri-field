@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint-typecheck-test:
+    name: Lint, typecheck, test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify npm package signatures
+        run: npm audit signatures
+        continue-on-error: true
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build
+        run: npm run build
+
+      - name: Unit + smoke + conformance tests
+        run: npm test
+
+      - name: Secret leakage guard (grep for committed secrets)
+        run: |
+          set -e
+          # Refuse to ship the .env file by accident.
+          if [ -f .env ]; then
+            echo "::error file=.env::Refusing to ship committed .env file"
+            exit 1
+          fi
+          # Ensure no obvious AWS/Google/OpenAI secret prefixes leaked into source.
+          if grep -RIn --include="*.ts" --include="*.json" --include="*.md" \
+              -e "AKIA[0-9A-Z]\{16\}" \
+              -e "sk-[A-Za-z0-9]\{32,\}" \
+              -e "AIza[0-9A-Za-z_-]\{30,\}" \
+              -e "BEGIN PRIVATE KEY" \
+              -e "BEGIN OPENSSH PRIVATE KEY" \
+              src/ tests/ scripts/ docs/ README*.md AGENTS.md CLAUDE.md 2>/dev/null \
+              | grep -v "fake-secret\|do-not-leak\|EXAMPLE\|tests/conformance/secret-leakage" ; then
+            echo "::error::Possible secret leakage in source"
+            exit 1
+          fi
+
+      - name: Inspector smoke (stdio, optional)
+        run: |
+          npx --yes @modelcontextprotocol/inspector --cli node dist/server.js --stdio --method tools/list
+        continue-on-error: true
+
+  ui-tests:
+    name: UI (Playwright) — Phase 5+
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: lint-typecheck-test
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Build UI bundle
+        run: npm run build:ui
+
+      - name: Playwright UI tests
+        run: npm run test:ui

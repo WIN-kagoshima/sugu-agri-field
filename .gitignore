@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+dist/
+*.tsbuildinfo
+.tsbuildinfo
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Environment & secrets
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+
+# Editor
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+.nyc_output/
+playwright-report/
+test-results/
+
+# Snapshots: keep schema/scripts in repo, ignore generated DB binaries
+snapshots/*.sqlite
+snapshots/*.sqlite-*
+snapshots/raw/
+!snapshots/README.md
+!snapshots/.gitkeep
+
+# Cloud Run / build artifacts
+.gcloudignore-effective
+build/
+
+# Token store (Phase 4 dev only — never commit)
+.tokens/

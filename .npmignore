@@ -1,0 +1,44 @@
+# Belt-and-suspenders: package.json `files` is the primary allowlist.
+# This .npmignore explicitly denies anything that could leak through.
+
+# Sources & build configs
+src/
+tests/
+scripts/
+docs/
+examples/
+.cursor/
+.github/
+.husky/
+.vscode/
+
+# Dev configs
+biome.json
+playwright.config.ts
+vite.config.ts
+tsconfig.json
+tsconfig.build.json
+
+# Snapshots are too big and have their own license terms; never publish.
+snapshots/*.sqlite
+snapshots/*.sqlite-journal
+snapshots/*.sqlite-wal
+
+# Tokens & local state
+.tokens/
+.env
+.env.*
+*.log
+
+# Coverage / reports
+coverage/
+test-results/
+playwright-report/
+*.tsbuildinfo
+
+# OS / editor noise
+.DS_Store
+Thumbs.db
+
+# Source maps for production npm tarballs (kept locally)
+dist/**/*.map

@@ -1,0 +1,88 @@
+name: Bug report
+description: Something does not work as documented in the README, AGENTS.md, or docs/api-reference.md.
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to report a bug.
+
+        **Security issues should NOT be filed here.** See [SECURITY.md](https://github.com/WIN-kagoshima/sugu-agri-field/blob/main/SECURITY.md) for the private reporting channel.
+
+  - type: input
+    id: version
+    attributes:
+      label: Server version
+      description: From `package.json` `version`, or `node dist/server.js --version` output.
+      placeholder: "0.5.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: transport
+    attributes:
+      label: Transport
+      options:
+        - stdio
+        - streamable-http
+    validations:
+      required: true
+
+  - type: dropdown
+    id: client
+    attributes:
+      label: MCP client
+      options:
+        - Cursor
+        - Claude Desktop
+        - Claude Code
+        - ChatGPT (MCP Apps host)
+        - MCP Inspector CLI / Web
+        - Custom SDK client
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps. If possible, include the JSON-RPC request and response.
+      placeholder: |
+        1. Configure the server with `MCP_BASE_URL=http://localhost:3001` and run `npm run start:http`.
+        2. From the host, call `get_weather_1km` with `{ lat: 31.59, lng: 130.55 }`.
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Include any error message exactly as the host displayed it. Redact secrets.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Server logs (optional)
+      description: stderr lines from around the time of the failure. Run with `LOG_LEVEL=debug` for more detail.
+      render: shell
+
+  - type: checkboxes
+    id: data-license
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I have searched existing issues.
+          required: true
+        - label: I have read [docs/data-license.md](https://github.com/WIN-kagoshima/sugu-agri-field/blob/main/docs/data-license.md) if my issue concerns external data.
+          required: false

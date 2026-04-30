@@ -1,0 +1,78 @@
+name: Feature request
+description: Propose a new tool, prompt, resource, or behaviour change.
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before opening, please skim:
+        - The MCP spec: https://modelcontextprotocol.io/specification/latest
+        - `docs/api-reference.md` to see what already exists.
+        - The Phase 6+ roadmap entries in `CHANGELOG.md` (your idea may already be planned).
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: Kind
+      options:
+        - New tool
+        - New prompt
+        - New resource
+        - Adapter for a new data source
+        - Behaviour change to an existing tool / prompt
+        - Operational / deployment change
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What user-visible problem are we solving? Why now?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+      description: |
+        Sketch the API. For tools, include a draft `inputSchema` and an
+        example `structuredContent` payload. For prompts, the slash
+        command and arguments.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What else could solve this? Why is the proposal preferred?
+
+  - type: dropdown
+    id: side-effect
+    attributes:
+      label: Side-effect classification (for new tools)
+      options:
+        - read-only
+        - draft
+        - mutating
+        - destructive
+        - n/a (not a tool)
+
+  - type: input
+    id: data-source
+    attributes:
+      label: Data source (if any)
+      description: License, redistribution rights, attribution, caching policy.
+
+  - type: checkboxes
+    id: pre-flight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I confirm this does NOT require breaking changes to an already-published tool name or schema.
+          required: false
+        - label: I am willing to send a PR if the proposal is accepted.
+          required: false

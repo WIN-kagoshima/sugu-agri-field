@@ -1,0 +1,41 @@
+---
+description: Coding style — TypeScript ESM, Zod, errors, logging
+globs: src/**/*.ts, src/**/*.tsx, scripts/**/*.ts, server.ts, tests/**/*.ts
+---
+
+# Coding style
+
+## Module system
+
+- Node 20+, TypeScript ESM, `moduleResolution: NodeNext`.
+- Imports use the `.js` extension for local files (e.g. `import { x } from "./foo.js";`).
+- Use `node:` protocol for Node built-ins: `import { readFile } from "node:fs/promises";`.
+
+## Validation
+
+- All tool inputs validated with Zod at the boundary. No raw `any` from clients.
+- Use `zod/v3` import path (the SDK is on Zod v3.25 peer dep).
+- Keep schemas exported from `src/tools/<name>.ts` so tests can re-use them.
+
+## Errors
+
+- Adapter errors are typed under `src/lib/errors.ts` (`UpstreamError`, `NotFoundError`, `ValidationError`, `AuthError`, `RateLimitError`).
+- Tool handlers catch adapter errors, log with structured fields, and return either:
+  - a JSON-RPC error from the SDK (for protocol-level failures), or
+  - `{ isError: true, content: [{ type: "text", text: "<safe message>" }] }` (for input/business failures).
+- Never include stack traces, SQL, or upstream URLs in messages returned to the client.
+
+## Logging
+
+- Use `src/lib/logger.ts` (JSON Lines to stderr in dev, structured JSON to stdout in production).
+- Never log secrets, tokens, or full request bodies that may contain PII.
+- Required fields on each log line: `level`, `msg`, `time`, `traceId` (when available).
+
+## Imports
+
+- Imports go at the top of the file. No inline dynamic `import()` except for code-splitting in `src/ui/`.
+- Group order: node built-ins → third-party → `@/` aliases → relative.
+
+## Side-effect classification
+
+Every tool file must export a `meta` object with a `sideEffect` field of: `"read-only" | "draft" | "mutating" | "destructive"`. Tools added without it fail the lint script.

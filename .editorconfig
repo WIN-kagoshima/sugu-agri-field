@@ -1,0 +1,38 @@
+# EditorConfig — keeps non-Biome editors (vim, IntelliJ, VS Code without
+# the Biome extension installed) consistent with the formatter.
+#
+# Settings here mirror biome.json:
+#   indentStyle: space
+#   indentWidth: 2
+#   lineWidth: 100
+#   lineEnding: lf
+#   charset: utf-8
+#
+# Reference: https://editorconfig.org/
+
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+insert_final_newline = true
+trim_trailing_whitespace = true
+max_line_length = 100
+
+# Markdown: keep trailing whitespace because two trailing spaces is a
+# significant linebreak in CommonMark.
+[*.md]
+trim_trailing_whitespace = false
+max_line_length = off
+
+# Snapshot READMEs use long table rows; relax the cap.
+[snapshots/**.md]
+max_line_length = off
+
+# Generated / vendored artifacts.
+[{package-lock.json,*.snap}]
+indent_size = unset
+insert_final_newline = unset
+end_of_line = unset

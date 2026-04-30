@@ -1,0 +1,105 @@
+name: Release
+
+# Triggered by pushing a SemVer-prefixed tag (e.g. `v0.5.0`).
+# Builds the package, runs the full test suite, builds the UI bundle,
+# and publishes a GitHub Release with the dashboard.html attached.
+#
+# Publishing to npm is disabled by default — flip the `publish-npm`
+# input or wire the `NPM_TOKEN` secret if/when you want it.
+
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+      - "v[0-9]+.[0-9]+.[0-9]+-*"
+
+permissions:
+  contents: write
+  id-token: write
+
+jobs:
+  release:
+    name: Build, test, and release ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify tag matches package.json version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(node -p "require('./package.json').version")
+          if [ "$tag" != "$pkg" ]; then
+            echo "::error::Tag $GITHUB_REF_NAME (=$tag) does not match package.json version $pkg"
+            exit 1
+          fi
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Build server
+        run: npm run build
+
+      - name: Build UI bundle
+        run: npm run build:ui
+
+      - name: Test
+        run: npm test
+
+      - name: Extract release notes from CHANGELOG
+        id: notes
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          notes=$(awk -v ver="$version" '
+            $0 ~ "^## \\["ver"\\]" { found=1; next }
+            found && /^## \[/        { exit }
+            found                    { print }
+          ' CHANGELOG.md)
+          {
+            echo "notes<<EOF"
+            echo "$notes"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Stage release assets
+        run: |
+          mkdir -p release-assets
+          cp dist/ui/dashboard.html release-assets/sugu-agri-field-dashboard-${GITHUB_REF_NAME}.html
+          (cd dist && tar -czf "../release-assets/sugu-agri-field-server-${GITHUB_REF_NAME}.tar.gz" .)
+          shasum -a 256 release-assets/* > release-assets/SHA256SUMS
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ github.ref_name }}
+          tag_name: ${{ github.ref_name }}
+          body: ${{ steps.notes.outputs.notes }}
+          draft: false
+          prerelease: ${{ contains(github.ref_name, '-') }}
+          files: |
+            release-assets/sugu-agri-field-dashboard-${{ github.ref_name }}.html
+            release-assets/sugu-agri-field-server-${{ github.ref_name }}.tar.gz
+            release-assets/SHA256SUMS
+
+      # Set the repository variable PUBLISH_TO_NPM=true and the secret
+      # NPM_TOKEN to opt in to automatic npm publishing on release tags.
+      - name: Publish to npm (optional)
+        if: ${{ vars.PUBLISH_TO_NPM == 'true' && !contains(github.ref_name, '-') }}
+        run: npm publish --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

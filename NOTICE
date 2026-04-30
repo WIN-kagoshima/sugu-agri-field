@@ -1,0 +1,45 @@
+SuguAgriField MCP
+Copyright 2026 Sugukuru Inc.
+
+This product includes software developed at Sugukuru Inc.
+(https://github.com/WIN-kagoshima/sugu-agri-field).
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this software except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+----------------------------------------------------------------------
+Third-party data sources and attributions
+----------------------------------------------------------------------
+
+Open-Meteo (https://open-meteo.com)
+  Forecast data is provided under CC-BY 4.0
+  (https://creativecommons.org/licenses/by/4.0/). All tool responses
+  that include weather data carry an `attribution` field reproducing
+  the upstream credit string. Operators MUST surface that string to
+  end users when displaying weather data.
+
+JMA Disaster XML feed (https://xml.kishou.go.jp/)
+  Issued by 気象庁 (Japan Meteorological Agency). Use is subject to
+  the Japan Meteorological Business Act (気象業務法). The
+  `get_weather_warning` tool caches data for at most 10 minutes and
+  embeds an attribution + modification disclosure in every response.
+
+eMAFF Fude Polygon (https://open.fude.maff.go.jp/)
+  Public open data published by the Ministry of Agriculture, Forestry
+  and Fisheries. Snapshots are built locally by `npm run snapshots:build`
+  and are NOT redistributed in this npm package.
+
+FAMIC pesticide registrations (https://www.famic.go.jp/)
+  Public data published by the Food and Agricultural Materials Inspection
+  Center. Snapshots are built locally and NOT redistributed.
+
+----------------------------------------------------------------------
+Third-party software (transitive)
+----------------------------------------------------------------------
+
+This package depends on @modelcontextprotocol/sdk, express, zod,
+better-sqlite3, and other packages whose licenses are recorded in
+their respective `package.json` files inside `node_modules/`.

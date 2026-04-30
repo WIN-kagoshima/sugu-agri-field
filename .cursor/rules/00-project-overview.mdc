@@ -1,0 +1,42 @@
+---
+description: SuguAgriField project overview — always apply
+alwaysApply: true
+---
+
+# SuguAgriField MCP server
+
+Reference implementation of an MCP server that exposes Japanese agricultural data — farmland polygons (eMAFF), 1 km weather (Open-Meteo / JMA), and pesticide registrations (FAMIC) — to AI agents.
+
+## What it does
+
+- `search_farmland` — eMAFF Fude polygon search by address / prefecture / crop.
+- `get_weather_1km` — hourly weather forecast at lat/lng (Open-Meteo, CC-BY 4.0).
+- `area_summary` / `nearby_farms` / `get_pesticide_rules` — derived queries.
+- Phase 2: 5 user-controlled prompts (slash commands).
+- Phase 3: Form-mode elicitation when input is missing.
+- Phase 4: URL-mode elicitation + OAuth Client Credentials.
+- Phase 5: MCP Apps UI dashboard (`ui://sugu-agri/dashboard.html`).
+
+## Authoritative specs
+
+- MCP Spec: <https://modelcontextprotocol.io/specification/latest>
+- MCP Apps Extension: <https://github.com/modelcontextprotocol/ext-apps>
+- TS SDK v1.x docs: <https://modelcontextprotocol.github.io/typescript-sdk/index.html>
+
+## Phase ↔ version mapping
+
+- `0.1.x` → Phase 0–1 (Tools + Streamable HTTP + Server Card).
+- `0.2.x` → Phase 2 (Prompts).
+- `0.3.x` → Phase 3 (Form elicitation).
+- `0.4.x` → Phase 4 (URL elicitation + OAuth).
+- `0.5.x` → Phase 5 (MCP Apps UI).
+- `1.0.0` → public surface frozen under SemVer.
+
+## Mandatory companion rules
+
+- `01-design-principles.mdc` — official 8 principles applied here.
+- `02-coding-style.mdc` — TypeScript ESM, Zod, error shape.
+- `03-mcp-tool-rules.mdc` — naming, schema, visibility, error.
+- `04-test-strategy.mdc` — Vitest + Inspector smoke + Playwright UI.
+- `05-deploy-strategy.mdc` — Cloud Run, Streamable HTTP, headers.
+- `06-data-license.mdc` — every data source has a documented license.
