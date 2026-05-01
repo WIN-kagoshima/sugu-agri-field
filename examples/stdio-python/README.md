@@ -1,7 +1,7 @@
 # Python stdio client example
 
 Uses the official `mcp` Python SDK (`mcp[cli]`) to drive the
-SuguAgriField MCP server over stdio.
+AgriOps MCP server over stdio.
 
 ## Setup
 
@@ -29,7 +29,7 @@ python run.py
 ## Expected output (truncated)
 
 ```
-✓ Connected: SuguAgriField vX.Y.Z
+✓ Connected: AgriOps MCP vX.Y.Z
 ✓ Tools: get_weather_1km, …
 ✓ 24 hourly points
 ✓ Attribution: Weather data by Open-Meteo.com (CC-BY 4.0).

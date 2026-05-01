@@ -22,7 +22,7 @@ test.describe("MCP Apps UI bundle (dashboard.html)", () => {
     await expect(page.locator("#root")).toBeVisible({ timeout: 10_000 });
 
     // Top-level dashboard heading is always rendered (offline-friendly).
-    await expect(page.getByText(/SuguAgriField/i)).toBeVisible();
+    await expect(page.getByText(/AgriOps MCP/i)).toBeVisible();
 
     // No uncaught JS errors at boot.
     expect(errors, errors.join("\n")).toEqual([]);

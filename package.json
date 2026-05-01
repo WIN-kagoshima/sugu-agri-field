@@ -1,24 +1,24 @@
 {
-  "name": "@sugukuru/sugu-agri-field",
+  "name": "@win-kagoshima/agriops-mcp",
   "version": "0.5.1",
-  "description": "SuguAgriField MCP server — Japanese agricultural land + weather + pesticide data for SSW workforce dispatching. Reference implementation of MCP Spec 2025-11-25 + MCP Apps Extension 2026-01-26.",
+  "description": "AgriOps MCP server — Japanese agricultural land + weather + pesticide data for SSW workforce dispatching. Reference implementation of MCP Spec 2025-11-25 + MCP Apps Extension 2026-01-26.",
   "type": "module",
   "license": "Apache-2.0",
-  "author": "Sugukuru Inc.",
-  "homepage": "https://github.com/WIN-kagoshima/sugu-agri-field",
+  "author": "WIN Kagoshima",
+  "homepage": "https://github.com/WIN-kagoshima/agriops-mcp",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/WIN-kagoshima/sugu-agri-field.git"
+    "url": "git+https://github.com/WIN-kagoshima/agriops-mcp.git"
   },
   "bugs": {
-    "url": "https://github.com/WIN-kagoshima/sugu-agri-field/issues"
+    "url": "https://github.com/WIN-kagoshima/agriops-mcp/issues"
   },
   "engines": {
     "node": ">=20.0.0"
   },
   "main": "./dist/server.js",
   "bin": {
-    "sugu-agri-field": "./dist/server.js"
+    "agriops-mcp": "./dist/server.js"
   },
   "files": [
     "dist/**/*.js",

@@ -3,24 +3,24 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - build
-      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
-      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
-      - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest
+      - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest
       - .
   - id: push
     name: gcr.io/cloud-builders/docker
     args:
       - push
       - --all-tags
-      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp
   - id: deploy
     name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
     entrypoint: gcloud
     args:
       - run
       - deploy
-      - sugu-agri-field
-      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
+      - agriops-mcp
+      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
       - --region=$_REGION
       - --platform=managed
       - --allow-unauthenticated
@@ -31,17 +31,17 @@ steps:
       - --cpu=1
       - --concurrency=80
       - --timeout=60s
-      - --set-env-vars=LOG_LEVEL=info,MCP_BASE_URL=$_MCP_BASE_URL,SUGU_TRUST_PROXY=1,SUGU_RATE_RPS=15,SUGU_RATE_BURST=45
-      - --set-secrets=SUGU_TOKEN_ENC_KEY=$_TOKEN_ENC_SECRET:latest,SESSION_COOKIE_SECRET=$_SESSION_COOKIE_SECRET:latest
+      - --set-env-vars=LOG_LEVEL=info,MCP_BASE_URL=$_MCP_BASE_URL,AGRIOPS_TRUST_PROXY=1,AGRIOPS_RATE_RPS=15,AGRIOPS_RATE_BURST=45
+      - --set-secrets=AGRIOPS_TOKEN_ENC_KEY=$_TOKEN_ENC_SECRET:latest,SESSION_COOKIE_SECRET=$_SESSION_COOKIE_SECRET:latest
 options:
   logging: CLOUD_LOGGING_ONLY
   dynamic_substitutions: true
 substitutions:
   _REGION: asia-northeast1
-  _REPO: sugu-mcp
-  _SERVICE_ACCOUNT: sugu-agri-runtime@${PROJECT_ID}.iam.gserviceaccount.com
-  _TOKEN_ENC_SECRET: sugu-token-enc-key
-  _SESSION_COOKIE_SECRET: sugu-session-cookie-secret
+  _REPO: agriops-mcp
+  _SERVICE_ACCOUNT: agriops-runtime@${PROJECT_ID}.iam.gserviceaccount.com
+  _TOKEN_ENC_SECRET: agriops-token-enc-key
+  _SESSION_COOKIE_SECRET: agriops-session-cookie-secret
 images:
-  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
-  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest

@@ -1,8 +1,8 @@
 #!/usr/bin/env pwsh
 $ErrorActionPreference = "Stop"
 
-$BaseUrl = if ($env:SUGU_BASE_URL) { $env:SUGU_BASE_URL } else { "http://localhost:3001" }
-$ReqId = if ($env:SUGU_REQ_ID) { $env:SUGU_REQ_ID } else { "curl-example-$([int][double]::Parse((Get-Date -UFormat %s)))" }
+$BaseUrl = if ($env:AGRIOPS_BASE_URL) { $env:AGRIOPS_BASE_URL } else { "http://localhost:3001" }
+$ReqId = if ($env:AGRIOPS_REQ_ID) { $env:AGRIOPS_REQ_ID } else { "curl-example-$([int][double]::Parse((Get-Date -UFormat %s)))" }
 
 $Headers = @{
     "content-type"     = "application/json"

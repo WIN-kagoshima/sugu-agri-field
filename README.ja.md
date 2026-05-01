@@ -1,11 +1,11 @@
-# SuguAgriField MCP（日本語）
+# AgriOps MCP（日本語）
 
 > 公式 MCP Spec 2025-11-25 / MCP Apps Extension 2026-01-26 / MCP TypeScript SDK v1.x に準拠した **参照実装** MCP サーバ。
 > Apache-2.0 · TypeScript ESM · Node.js 20+ · stdio + Streamable HTTP。
 >
 > English: [README.md](./README.md)
 
-SuguAgriField は、日本の農業データ（eMAFF 筆ポリゴン、Open-Meteo / 気象庁の 1km メッシュ気象、FAMIC 農薬登録情報）を MCP 経由で AI エージェントに公開します。想定ユーザは、農業に特定技能外国人を派遣する派遣会社です。
+AgriOps MCP は、日本の農業データ（eMAFF 筆ポリゴン、Open-Meteo / 気象庁の 1km メッシュ気象、FAMIC 農薬登録情報）を MCP 経由で AI エージェントに公開します。想定ユーザは、農業に特定技能外国人を派遣する派遣会社です。
 
 ## ステータス
 
@@ -25,8 +25,8 @@ SuguAgriField は、日本の農業データ（eMAFF 筆ポリゴン、Open-Mete
 Node.js 20+ と npm（pnpm/yarn でも可）が必要です。
 
 ```bash
-git clone https://github.com/WIN-kagoshima/sugu-agri-field.git
-cd sugu-agri-field
+git clone https://github.com/WIN-kagoshima/agriops-mcp.git
+cd agriops-mcp
 npm install
 npm run build
 npm run dev
@@ -37,9 +37,9 @@ npm run dev
 ```json
 {
   "mcpServers": {
-    "sugu-agri-field": {
+    "agriops-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/sugu-agri-field/dist/server.js", "--stdio"]
+      "args": ["/absolute/path/to/agriops-mcp/dist/server.js", "--stdio"]
     }
   }
 }
@@ -98,4 +98,4 @@ npm run start:http        # $PORT (default 3001) で待ち受け
 
 ## ライセンス
 
-Apache-2.0. © 2026 Sugukuru Inc.
+Apache-2.0. © 2026 WIN Kagoshima

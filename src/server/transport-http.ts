@@ -66,12 +66,12 @@ export async function startHttp(
 
   const lifecycle = new Lifecycle({ logger });
   const metrics = createMetrics({
-    bearerToken: options.metricsBearer ?? process.env.SUGU_METRICS_BEARER,
-    defaultLabels: { service: "sugu-agri-field", version },
+    bearerToken: options.metricsBearer ?? env("AGRIOPS_METRICS_BEARER", "SUGU_METRICS_BEARER"),
+    defaultLabels: { service: "agriops-mcp", version },
   });
   const rateLimiter = createRateLimiter({
-    refillPerSec: numEnv("SUGU_RATE_RPS", 10),
-    burst: numEnv("SUGU_RATE_BURST", 30),
+    refillPerSec: numEnv("AGRIOPS_RATE_RPS", 10, "SUGU_RATE_RPS"),
+    burst: numEnv("AGRIOPS_RATE_BURST", 30, "SUGU_RATE_BURST"),
     logger,
     metrics,
   });
@@ -79,8 +79,8 @@ export async function startHttp(
   const app = express();
   app.disable("x-powered-by");
   // Trust the first reverse-proxy hop. On Cloud Run that's GFE; on
-  // self-hosted setups operators set this via SUGU_TRUST_PROXY.
-  app.set("trust proxy", numEnv("SUGU_TRUST_PROXY", 1));
+  // self-hosted setups operators set this via AGRIOPS_TRUST_PROXY.
+  app.set("trust proxy", numEnv("AGRIOPS_TRUST_PROXY", 1, "SUGU_TRUST_PROXY"));
   app.use(express.json({ limit: "1mb" }));
   app.use(cookieParser(config.sessionCookieSecret));
   app.use(requestIdMiddleware);
@@ -91,7 +91,7 @@ export async function startHttp(
       res.status(503).json({ status: "draining", state: lifecycle.getState() });
       return;
     }
-    res.json({ status: "ok", version, name: "sugu-agri-field" });
+    res.json({ status: "ok", version, name: "agriops-mcp" });
   };
   app.get("/healthz", healthHandler);
   app.get("/livez", healthHandler);
@@ -287,10 +287,12 @@ function isAllowedHost(host: string | undefined, allowed: string[]): boolean {
 }
 
 function chooseTokenStore(logger: Logger): TokenStore {
-  const hasKey = !!process.env.SUGU_TOKEN_ENC_KEY || !!process.env.SUGU_TOKEN_ENC_PASSPHRASE;
+  const hasKey =
+    !!env("AGRIOPS_TOKEN_ENC_KEY", "SUGU_TOKEN_ENC_KEY") ||
+    !!env("AGRIOPS_TOKEN_ENC_PASSPHRASE", "SUGU_TOKEN_ENC_PASSPHRASE");
   if (hasKey) {
     try {
-      const store = new FileTokenStore({ dir: process.env.SUGU_TOKEN_DIR });
+      const store = new FileTokenStore({ dir: env("AGRIOPS_TOKEN_DIR", "SUGU_TOKEN_DIR") });
       logger.info("token store backend: encrypted file");
       return store;
     } catch (err) {
@@ -300,14 +302,18 @@ function chooseTokenStore(logger: Logger): TokenStore {
     }
   } else {
     logger.warn(
-      "token store backend: in-memory (NOT for production). Set SUGU_TOKEN_ENC_KEY (base64 32B) or SUGU_TOKEN_ENC_PASSPHRASE to enable the encrypted file store.",
+      "token store backend: in-memory (NOT for production). Set AGRIOPS_TOKEN_ENC_KEY (base64 32B) or AGRIOPS_TOKEN_ENC_PASSPHRASE to enable the encrypted file store.",
     );
   }
   return new InMemoryTokenStore();
 }
 
-function numEnv(name: string, fallback: number): number {
-  const raw = process.env[name];
+function env(name: string, legacyName?: string): string | undefined {
+  return process.env[name] || (legacyName ? process.env[legacyName] : undefined);
+}
+
+function numEnv(name: string, fallback: number, legacyName?: string): number {
+  const raw = env(name, legacyName);
   if (!raw) return fallback;
   const n = Number(raw);
   return Number.isFinite(n) && n >= 0 ? n : fallback;

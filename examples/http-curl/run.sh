@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${SUGU_BASE_URL:-http://localhost:3001}"
-REQ_ID="${SUGU_REQ_ID:-curl-example-$(date +%s)}"
+BASE_URL="${AGRIOPS_BASE_URL:-http://localhost:3001}"
+REQ_ID="${AGRIOPS_REQ_ID:-curl-example-$(date +%s)}"
 
 echo "▶ Server card:"
 curl -sS "$BASE_URL/.well-known/mcp-server.json" | head -c 1000

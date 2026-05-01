@@ -191,7 +191,7 @@ export function Dashboard(): JSX.Element {
         </output>
       )}
       <header className="app-header">
-        <div className="app-title">SuguAgriField</div>
+        <div className="app-title">AgriOps MCP</div>
         <div className="app-controls">
           <select
             value={bridge.state.prefectureCode}

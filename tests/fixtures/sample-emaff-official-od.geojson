@@ -1,0 +1,27 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "polygon_uuid": "4fac03f2-2f00-4c80-b882-911541a01fb7",
+        "local_government_cd": "462012",
+        "land_type": 100,
+        "point_lng": 130.562778123,
+        "point_lat": 31.596553456
+      },
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [130.562, 31.596],
+            [130.563, 31.596],
+            [130.563, 31.597],
+            [130.562, 31.597],
+            [130.562, 31.596]
+          ]
+        ]
+      }
+    }
+  ]
+}

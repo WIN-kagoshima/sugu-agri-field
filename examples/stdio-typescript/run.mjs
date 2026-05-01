@@ -1,6 +1,6 @@
 // @ts-check
 /**
- * Minimal TypeScript / Node stdio client for SuguAgriField MCP.
+ * Minimal TypeScript / Node stdio client for AgriOps MCP.
  *
  * Usage:
  *   node ./run.mjs                  # uses ../../dist/server.js
@@ -20,10 +20,7 @@ const transport = new StdioClientTransport({
   args: [serverEntry, "--stdio"],
 });
 
-const client = new Client(
-  { name: "sugu-agri-field-example", version: "0.0.1" },
-  { capabilities: {} },
-);
+const client = new Client({ name: "agriops-mcp-example", version: "0.0.1" }, { capabilities: {} });
 
 await client.connect(transport);
 

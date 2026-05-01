@@ -1,4 +1,4 @@
-# Contributing to SuguAgriField MCP
+# Contributing to AgriOps MCP
 
 Thanks for considering a contribution. This project is a public reference implementation of MCP, so we hold the bar high on **spec correctness** and **operational safety**.
 

@@ -98,7 +98,7 @@ describe("Phase 4 OAuth URL elicitation flow", () => {
     // Step 2: extract the userId the server assigned us. The cookie is
     // signed but we only need the value to compare with the elicitation
     // record. The cookie-parser `signed` form is `s:<value>.<sig>`.
-    const sessionCookie = cookieJar.sugu_session;
+    const sessionCookie = cookieJar.agriops_session;
     expect(sessionCookie, "session cookie present").toBeTruthy();
     const userId = decodeSignedCookieValue(sessionCookie as string);
     expect(userId.length).toBeGreaterThan(8);

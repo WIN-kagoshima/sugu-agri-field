@@ -9,12 +9,12 @@
 #
 # Runtime ENV:
 #   PORT (Cloud Run sets this)
-#   MCP_BASE_URL (e.g. https://mcp.sugukuru.dev)
+#   MCP_BASE_URL (e.g. https://mcp.agriops.dev)
 #   LOG_LEVEL (info|warn|error|debug)
 #
 # Build:
-#   docker build -t sugu-agri-field:local .
-#   docker run --rm -p 8080:8080 -e PORT=8080 -e MCP_BASE_URL=http://localhost:8080 sugu-agri-field:local
+#   docker build -t agriops-mcp:local .
+#   docker run --rm -p 8080:8080 -e PORT=8080 -e MCP_BASE_URL=http://localhost:8080 agriops-mcp:local
 
 ############################
 # 1. deps stage — install full toolchain for build/test assets
@@ -83,8 +83,9 @@ COPY --from=build  --chown=nonroot:nonroot /app/dist          ./dist
 COPY --from=prod-deps  --chown=nonroot:nonroot /app/node_modules  ./node_modules
 COPY --from=build  --chown=nonroot:nonroot /app/package.json  ./package.json
 
-# Snapshots dir always exists; specific files only present if BAKE_SNAPSHOTS=1.
-COPY --chown=nonroot:nonroot snapshots/.gitkeep ./snapshots/.gitkeep
+# Snapshot SQLite files are operator-built and intentionally untracked, but
+# deploy builds may include them in the Cloud Build source bundle.
+COPY --chown=nonroot:nonroot snapshots ./snapshots
 
 USER nonroot
 EXPOSE 8080

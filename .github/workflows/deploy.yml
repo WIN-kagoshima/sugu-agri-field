@@ -19,8 +19,8 @@ permissions:
 env:
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
   REGION: asia-northeast1
-  REPOSITORY: sugu-mcp
-  SERVICE: sugu-agri-field
+  REPOSITORY: agriops-mcp
+  SERVICE: agriops-mcp
 
 jobs:
   deploy:
@@ -31,6 +31,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
@@ -40,6 +46,9 @@ jobs:
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
 
+      - name: Install smoke-test dependencies
+        run: npm ci --ignore-scripts
+
       - name: Configure docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
 
@@ -48,10 +57,19 @@ jobs:
           gcloud builds submit \
             --config=cloudbuild.yaml \
             --project=$PROJECT_ID \
-            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=${{ secrets.MCP_BASE_URL }},_SERVICE_ACCOUNT=${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }},_TOKEN_ENC_SECRET=sugu-token-enc-key,_SESSION_COOKIE_SECRET=sugu-session-cookie-secret \
+            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=${{ secrets.MCP_BASE_URL }},_SERVICE_ACCOUNT=${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }},_TOKEN_ENC_SECRET=agriops-token-enc-key,_SESSION_COOKIE_SECRET=agriops-session-cookie-secret \
             --region=$REGION
 
       - name: Print Cloud Run URL
         run: |
           gcloud run services describe $SERVICE \
             --region=$REGION --format='value(status.url)'
+
+      - name: Smoke test Cloud Run
+        run: |
+          TOKEN="$(gcloud auth print-identity-token)"
+          npm run deploy:smoke -- \
+            --base-url="${{ secrets.MCP_BASE_URL }}" \
+            --health-path=/livez \
+            --allow-not-ready \
+            --auth-bearer="$TOKEN"

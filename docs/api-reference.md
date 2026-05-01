@@ -1,4 +1,4 @@
-# API reference — SuguAgriField MCP
+# API reference — AgriOps MCP
 
 This document is the canonical, machine-checkable contract for everything
 this server exposes. The matching machine-readable version lives at
@@ -124,7 +124,7 @@ plus default values they can override on the next call.
 ### `open_dashboard` — Phase 5, read-only
 
 Returns a tool result whose `_meta.openWidget` and
-`_meta["openai/outputTemplate"]` point to `ui://sugu-agri/dashboard.html`.
+`_meta["openai/outputTemplate"]` point to `ui://agriops/dashboard.html`.
 Hosts that support MCP Apps render the React dashboard inline; others
 receive a structured-content text summary so the LLM still has something
 useful to say.
@@ -175,7 +175,7 @@ materialised.
 
 | URI | MIME | Phase | Notes |
 |---|---|---|---|
-| `ui://sugu-agri/dashboard.html` | `text/html` | 5 | Single-file React + MapLibre GL bundle. ~960 KB raw, ~270 KB gzip. Loaded by `open_dashboard` and any MCP Apps host. |
+| `ui://agriops/dashboard.html` | `text/html` | 5 | Single-file React + MapLibre GL bundle. ~960 KB raw, ~270 KB gzip. Loaded by `open_dashboard` and any MCP Apps host. |
 
 The server intentionally does NOT register `data://emaff/{fieldId}` or
 similar `data://` resources. eMAFF / FAMIC are only exposed via tools so
@@ -249,5 +249,5 @@ The server itself does NOT require any client capabilities. Specifically:
 - **No `roots`?** Not used in this server.
 - **No `sampling`?** Not used in this server.
 
-This means SuguAgriField MCP works out-of-the-box against any
+This means AgriOps MCP works out-of-the-box against any
 spec-compliant client, including stripped-down stdio shells.

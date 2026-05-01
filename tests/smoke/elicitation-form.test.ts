@@ -14,7 +14,7 @@ import { createLogger } from "../../src/lib/logger.js";
 import { createServer } from "../../src/server/create-server.js";
 
 describe("Phase 3 Form elicitation", () => {
-  const tmp = join(tmpdir(), `sugu-elicit-${process.pid}`);
+  const tmp = join(tmpdir(), `agriops-elicit-${process.pid}`);
   const dbPath = join(tmp, "emaff.sqlite");
 
   beforeAll(async () => {

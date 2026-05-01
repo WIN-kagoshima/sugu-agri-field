@@ -9,14 +9,18 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 ## [Unreleased]
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- Documented the authenticated Cloud Scheduler `/livez` synthetic monitor used while organization policy blocks public Cloud Run invocation.
+- GitHub Actions deploys now install smoke-test dependencies and verify the IAM-protected Cloud Run service after each deployment.
+- Cloud Build deploys now include locally built `snapshots/*.sqlite` files while still excluding raw source archives, allowing operators to bake first-party snapshots into Cloud Run images.
+- Snapshot builders now accept official eMAFF OD property names and official FAMIC Japanese CSV exports, including Shift_JIS-encoded files extracted from FAMIC ZIP downloads.
 - Added `npm run deploy:preflight`, a GCP preflight checker for billing, required APIs, Artifact Registry, runtime service account, Secret Manager entries, and existing Cloud Run service URL. The runbook now starts with this diagnostic so operators get concrete fix commands before deployment.
 - Added `npm run deploy:smoke`, a deployed-service smoke tester for `/healthz`, `/readyz`, Server Card, `/mcp` initialize, and optional `/metrics` bearer auth checks.
 - Added `/livez` as a liveness alias for Cloud Run environments where organization or edge infrastructure intercepts `/healthz`; `deploy:smoke` now supports `--auth-bearer` and `--health-path`.
-- `cloudbuild.yaml` now matches the runbook's `sugu-agri-runtime` service-account name and `sugu-mcp` Artifact Registry repository.
-- Cloud Build deploys now pass production HTTP env vars (`SUGU_TRUST_PROXY`, rate-limit settings) and Secret Manager mappings (`SUGU_TOKEN_ENC_KEY`, `SESSION_COOKIE_SECRET`) instead of silently falling back to dev defaults.
+- `cloudbuild.yaml` now matches the runbook's `agriops-runtime` service-account name and `agriops-mcp` Artifact Registry repository.
+- Cloud Build deploys now pass production HTTP env vars (`AGRIOPS_TRUST_PROXY`, rate-limit settings) and Secret Manager mappings (`AGRIOPS_TOKEN_ENC_KEY`, `SESSION_COOKIE_SECRET`) instead of silently falling back to dev defaults.
 - `deploy.yml` now passes `--project=$PROJECT_ID` explicitly to `gcloud builds submit` and forwards the required Secret Manager substitution names.
 - `npm run deploy` now refuses unsafe one-command source deploys and directs operators to the runbook, avoiding accidental Cloud Run deployments without secrets or the hardened image path.
-- `docs/runbook.md` now includes exact `sugu-session-cookie-secret` creation commands and uses the same `sugu-mcp` Artifact Registry repository as `cloudbuild.yaml`.
+- `docs/runbook.md` now includes exact `agriops-session-cookie-secret` creation commands and uses the same `agriops-mcp` Artifact Registry repository as `cloudbuild.yaml`.
 
 ## [0.5.1] — Patch — release hardening + Cloud Run image fix
 
@@ -39,15 +43,15 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ### Added — production sidecars
 - **Graceful shutdown** (`src/server/lifecycle.ts`): SIGTERM triggers a 8 s drain window. `/healthz` flips to 503 once draining. Inflight requests get to finish before the listening socket closes, matching Cloud Run's 10 s grace period.
-- **Per-IP token-bucket rate limiter** (`src/server/rate-limit.ts`): `/mcp` is bounded by `SUGU_RATE_RPS` / `SUGU_RATE_BURST`. Rejected requests return JSON-RPC error `-32429`, `Retry-After`, and `X-RateLimit-Limit` / `X-RateLimit-Remaining`.
+- **Per-IP token-bucket rate limiter** (`src/server/rate-limit.ts`): `/mcp` is bounded by `AGRIOPS_RATE_RPS` / `AGRIOPS_RATE_BURST`. Rejected requests return JSON-RPC error `-32429`, `Retry-After`, and `X-RateLimit-Limit` / `X-RateLimit-Remaining`.
 - **Adapter-aware `/readyz` probe**: enumerates each registered adapter (weather / JMA / eMAFF / FAMIC) and returns 503 with per-adapter reason strings when any is missing. Distinct from `/healthz` (liveness) per CNCF readiness conventions.
-- **Prometheus `/metrics` endpoint** (`src/server/metrics.ts`): zero-dependency exposition with counters (`mcp_requests_total`, `rate_limited_total`, `tool_calls_total`) and histograms (`tool_duration_ms`, `http_request_duration_ms`). Bearer-token gated when `SUGU_METRICS_BEARER` is set.
+- **Prometheus `/metrics` endpoint** (`src/server/metrics.ts`): zero-dependency exposition with counters (`mcp_requests_total`, `rate_limited_total`, `tool_calls_total`) and histograms (`tool_duration_ms`, `http_request_duration_ms`). Bearer-token gated when `AGRIOPS_METRICS_BEARER` is set.
 - **Tool result size cap** (`src/lib/tool-size.ts`): unbounded read tools (`search_farmland`, `area_summary`, `nearby_farms`, `get_pesticide_rules`) now fail closed with a structured `isError` if their JSON-serialised result exceeds 1 MiB, advising the model to lower `limit` or use `cursor` pagination.
 - **`docs/runbook.md`**: end-to-end Cloud Run deploy procedure, env-var reference, SLO targets, incident triage flowchart, key rotation, snapshot rebuild, and disaster recovery RTO/RPO matrix.
 
 ### Added — earlier in this Unreleased window
 - **`get_weather_warning` tool + `JmaWarningAdapter`**: surfaces active 警報・注意報 from the official JMA Disaster XML feed. Compliant with the Japan Meteorological Business Act: ≤10 minute cache, attribution baked into every response, no modification.
-- **`FileTokenStore`**: AES-256-GCM encrypted file backend for `TokenStore`, with deterministic per-key filenames, atomic writes, scrypt-derived keys from `SUGU_TOKEN_ENC_PASSPHRASE`, or a raw 32-byte base64 key from `SUGU_TOKEN_ENC_KEY`. Refuses to start unless one is set.
+- **`FileTokenStore`**: AES-256-GCM encrypted file backend for `TokenStore`, with deterministic per-key filenames, atomic writes, scrypt-derived keys from `AGRIOPS_TOKEN_ENC_PASSPHRASE`, or a raw 32-byte base64 key from `AGRIOPS_TOKEN_ENC_KEY`. Refuses to start unless one is set.
 - **X-Request-Id middleware**: Streamable HTTP now honours/echoes a stable per-request ID, plumbs it into `logger.child({ requestId })`, and surfaces it in error JSON-RPC `data.requestId`. Fulfils the contract that `safeErrorMessage` advertises ("report the request ID").
 - `examples/` folder with three runnable clients: `stdio-typescript/` (`@modelcontextprotocol/sdk`), `stdio-python/` (`mcp[cli]`), and `http-curl/` (Bash + PowerShell scripts hitting `/mcp`).
 - README badges: CI, CodeQL, OpenSSF Scorecard, npm version, Apache-2.0, Node ≥20, MCP Spec 2025-11-25, MCP Apps 2026-01-26.
@@ -81,7 +85,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 ## [0.5.0] — Phase 5 — MCP Apps UI dashboard + comprehensive test suite
 
 ### Added
-- `ui://sugu-agri/dashboard.html` resource: single-file React + MapLibre GL dashboard built with Vite + `vite-plugin-singlefile`.
+- `ui://agriops/dashboard.html` resource: single-file React + MapLibre GL dashboard built with Vite + `vite-plugin-singlefile`.
 - `open_dashboard` tool that returns `_meta.openWidget` for MCP Apps hosts and a structured-text fallback for others.
 - App-only helper tools used by the UI (`fetch_field_geojson`, `fetch_weather_layer`, `select_field`, `list_prefectures`, `list_municipalities`, `search_operators`, `export_plan_csv`, `summarize_farmland`, `compute_ndvi_stub`).
 - Standalone preview banner in the dashboard when no MCP Apps host bridge is detected (`useAppBridge.hasHost`).
@@ -125,10 +129,10 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - eMAFF and FAMIC SQLite snapshot build pipeline under `scripts/build-snapshots/`.
 - Cloud Run-ready Dockerfile and GitHub Actions deploy workflow.
 
-[Unreleased]: https://github.com/WIN-kagoshima/sugu-agri-field/compare/v0.5.1...HEAD
-[0.5.1]: https://github.com/WIN-kagoshima/sugu-agri-field/compare/v0.5.0...v0.5.1
-[0.5.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.5.0
-[0.4.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.4.0
-[0.3.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.3.0
-[0.2.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.2.0
-[0.1.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.1.0
+[Unreleased]: https://github.com/WIN-kagoshima/agriops-mcp/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/WIN-kagoshima/agriops-mcp/compare/v0.5.0...v0.5.1
+[0.5.0]: https://github.com/WIN-kagoshima/agriops-mcp/releases/tag/v0.5.0
+[0.4.0]: https://github.com/WIN-kagoshima/agriops-mcp/releases/tag/v0.4.0
+[0.3.0]: https://github.com/WIN-kagoshima/agriops-mcp/releases/tag/v0.3.0
+[0.2.0]: https://github.com/WIN-kagoshima/agriops-mcp/releases/tag/v0.2.0
+[0.1.0]: https://github.com/WIN-kagoshima/agriops-mcp/releases/tag/v0.1.0

@@ -59,18 +59,18 @@ export function buildServerCard(options: WellKnownOptions): Record<string, unkno
     });
 
   return {
-    name: "SuguAgriField",
+    name: "AgriOps MCP",
     version: options.version,
     description:
       "Japanese agricultural land + 1 km mesh weather + pesticide registration MCP server " +
       "for Specified Skilled Worker (SSW) workforce dispatching. Reference implementation of " +
       "MCP Spec 2025-11-25 + MCP Apps Extension 2026-01-26.",
-    homepage: "https://github.com/WIN-kagoshima/sugu-agri-field",
-    repository: "https://github.com/WIN-kagoshima/sugu-agri-field",
+    homepage: "https://github.com/WIN-kagoshima/agriops-mcp",
+    repository: "https://github.com/WIN-kagoshima/agriops-mcp",
     license: "Apache-2.0",
     contact: {
-      issues: "https://github.com/WIN-kagoshima/sugu-agri-field/issues",
-      security: "security@sugukuru.dev",
+      issues: "https://github.com/WIN-kagoshima/agriops-mcp/issues",
+      security: "security@agriops.dev",
     },
     endpoints: {
       mcp: `${options.baseUrl}/mcp`,

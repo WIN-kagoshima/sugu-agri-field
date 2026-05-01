@@ -36,7 +36,7 @@ export class URLElicitationRequiredError extends Error {
 
   /**
    * Shape this error for the JSON-RPC layer. The SDK's `registerTool`
-   * handler can re-throw a SuguAgriFieldError-like object; the registry
+   * handler can re-throw an AgriOpsMCPError-like object; the registry
    * layer maps it to a JSON-RPC error response with `code = -32042`.
    */
   toJsonRpc(): { code: number; message: string; data: UrlElicitationRequest } {

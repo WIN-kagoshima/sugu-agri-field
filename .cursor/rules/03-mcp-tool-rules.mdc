@@ -39,7 +39,7 @@ Each tool file exports `meta.sideEffect`:
 - `content` MUST contain at least one `text` entry, written for the LLM (a 1–3 sentence summary).
 - `structuredContent` is the machine-readable shape, validated by an output Zod schema.
 - For paginated tools, include `next_cursor` in `structuredContent`.
-- For UI-driven tools, include `_meta.openWidget = "ui://sugu-agri/<name>.html"` and a textual fallback in `content`.
+- For UI-driven tools, include `_meta.openWidget = "ui://agriops/<name>.html"` and a textual fallback in `content`.
 - Always include the data source attribution (`structuredContent.attribution`) when that is required by the source license.
 
 ## Errors

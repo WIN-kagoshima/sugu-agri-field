@@ -7,7 +7,7 @@ import { createLogger } from "../../src/lib/logger.js";
 import { createServer } from "../../src/server/create-server.js";
 
 describe("Phase 5 MCP Apps UI", () => {
-  it("registers ui://sugu-agri/dashboard.html as a resource and returns HTML", async () => {
+  it("registers ui://agriops/dashboard.html as a resource and returns HTML", async () => {
     const config = loadConfig();
     const logger = createLogger({ level: "warn" });
     const { server } = createServer({
@@ -24,9 +24,9 @@ describe("Phase 5 MCP Apps UI", () => {
     await Promise.all([client.connect(clientTransport), server.connect(serverTransport)]);
 
     const resources = await client.listResources();
-    expect(resources.resources.map((r) => r.uri)).toContain("ui://sugu-agri/dashboard.html");
+    expect(resources.resources.map((r) => r.uri)).toContain("ui://agriops/dashboard.html");
 
-    const read = await client.readResource({ uri: "ui://sugu-agri/dashboard.html" });
+    const read = await client.readResource({ uri: "ui://agriops/dashboard.html" });
     expect(read.contents).toHaveLength(1);
     const c = read.contents[0] as { mimeType?: string; text?: string };
     expect(c.mimeType).toBe("text/html");
@@ -58,7 +58,7 @@ describe("Phase 5 MCP Apps UI", () => {
     });
     expect(result.isError).toBeFalsy();
     const meta = (result as { _meta?: Record<string, unknown> })._meta ?? {};
-    expect(meta["openai/outputTemplate"]).toBe("ui://sugu-agri/dashboard.html");
+    expect(meta["openai/outputTemplate"]).toBe("ui://agriops/dashboard.html");
 
     // Fallback: even on hosts without MCP Apps the LLM gets a useful text summary.
     const content = result.content as Array<{ type: string; text?: string }>;

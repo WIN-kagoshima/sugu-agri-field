@@ -7,7 +7,7 @@ import { viteSingleFile } from "vite-plugin-singlefile";
  *
  * Output: a single self-contained `dist/ui/dashboard.html` (CSS, JS, and
  * fonts inlined) so the file can be served verbatim from the
- * `ui://sugu-agri/dashboard.html` MCP resource.
+ * `ui://agriops/dashboard.html` MCP resource.
  *
  * Constraints:
  *  - No external CDN refs (would be blocked by MCP Apps host CSP).

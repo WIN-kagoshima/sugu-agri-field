@@ -42,7 +42,7 @@ describe.skipIf(!hasDistServer())("Phase 1 Streamable HTTP smoke", () => {
     const cardRes = await fetch(`${baseUrl}/.well-known/mcp-server.json`);
     expect(cardRes.status).toBe(200);
     const card = (await cardRes.json()) as { name: string; tools: Array<{ name: string }> };
-    expect(card.name).toBe("SuguAgriField");
+    expect(card.name).toBe("AgriOps MCP");
     expect(card.tools.map((t) => t.name)).toContain("get_weather_1km");
 
     // MCP tools/list

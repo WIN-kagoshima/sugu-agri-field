@@ -47,7 +47,7 @@ describe("MCP conformance", () => {
     const { client, close } = await bootClient();
     try {
       const info = client.getServerVersion();
-      expect(info?.name).toBe("sugu-agri-field");
+      expect(info?.name).toBe("agriops-mcp");
       expect(info?.version).toBeTypeOf("string");
     } finally {
       await close();

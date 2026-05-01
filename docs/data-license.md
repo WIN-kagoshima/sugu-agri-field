@@ -1,6 +1,6 @@
 # Data licensing
 
-Every data source consumed by SuguAgriField MCP has a documented license.
+Every data source consumed by AgriOps MCP has a documented license.
 This document is the canonical reference; `.well-known/mcp-server.json` and
 `.cursor/rules/06-data-license.mdc` derive from it.
 

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * SuguAgriField MCP server entry point.
+ * AgriOps MCP server entry point.
  *
  *   node server.js --stdio   # stdio transport (default; for Claude Desktop, Cursor, VS Code)
  *   node server.js --http    # Streamable HTTP transport on $PORT (default 3001)
@@ -44,7 +44,7 @@ function parseTransport(argv: string[]): "stdio" | "http" {
 
 async function main(): Promise<void> {
   const config = loadConfig();
-  const logger = createLogger({ level: config.logLevel, base: { service: "sugu-agri-field" } });
+  const logger = createLogger({ level: config.logLevel, base: { service: "agriops-mcp" } });
   const version = await readVersion();
   const transportKind = parseTransport(process.argv.slice(2));
 

@@ -38,7 +38,7 @@ and orientation.
 
 Instances of abusive, harassing, or otherwise unacceptable behavior may
 be reported to the project maintainers at
-**`conduct@sugukuru.dev`** (placeholder — replace with your real address
+**`conduct@agriops.dev`** (placeholder — replace with your real address
 before publishing). All complaints will be reviewed and investigated
 promptly and fairly.
 

@@ -133,7 +133,7 @@ describe.skipIf(!existsSync(distServer))("HTTP transport host-header allowlist",
     const cardRes = await fetch(`${baseUrl}/.well-known/mcp-server.json`);
     expect(cardRes.status).toBe(200);
     const card = (await cardRes.json()) as { name?: string };
-    expect(card.name).toBe("SuguAgriField");
+    expect(card.name).toBe("AgriOps MCP");
   }, 30_000);
 });
 

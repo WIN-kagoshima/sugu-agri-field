@@ -5,32 +5,32 @@
  * The registry layer maps these to safe text.
  */
 
-export class SuguAgriFieldError extends Error {
+export class AgriOpsMCPError extends Error {
   public readonly code: string;
   public readonly details: Record<string, unknown> | undefined;
   constructor(code: string, message: string, details?: Record<string, unknown>) {
     super(message);
-    this.name = "SuguAgriFieldError";
+    this.name = "AgriOpsMCPError";
     this.code = code;
     this.details = details;
   }
 }
 
-export class ValidationError extends SuguAgriFieldError {
+export class ValidationError extends AgriOpsMCPError {
   constructor(message: string, details?: Record<string, unknown>) {
     super("validation_error", message, details);
     this.name = "ValidationError";
   }
 }
 
-export class NotFoundError extends SuguAgriFieldError {
+export class NotFoundError extends AgriOpsMCPError {
   constructor(resource: string, id: string) {
     super("not_found", `${resource} not found: ${id}`, { resource, id });
     this.name = "NotFoundError";
   }
 }
 
-export class UpstreamError extends SuguAgriFieldError {
+export class UpstreamError extends AgriOpsMCPError {
   public readonly upstream: string;
   constructor(upstream: string, message: string, details?: Record<string, unknown>) {
     super("upstream_error", message, details);
@@ -39,14 +39,14 @@ export class UpstreamError extends SuguAgriFieldError {
   }
 }
 
-export class AuthError extends SuguAgriFieldError {
+export class AuthError extends AgriOpsMCPError {
   constructor(message = "authorization required") {
     super("unauthorized", message);
     this.name = "AuthError";
   }
 }
 
-export class RateLimitError extends SuguAgriFieldError {
+export class RateLimitError extends AgriOpsMCPError {
   public readonly retryAfterSec: number | undefined;
   constructor(retryAfterSec?: number) {
     super("rate_limited", "rate limit exceeded");
@@ -77,7 +77,7 @@ export function safeErrorMessage(err: unknown): string {
   if (err instanceof UpstreamError) {
     return `Upstream data source temporarily unavailable (${err.upstream}). Please retry later.`;
   }
-  if (err instanceof SuguAgriFieldError) {
+  if (err instanceof AgriOpsMCPError) {
     return err.message;
   }
   return "Internal error. Please retry, and report the request ID if it persists.";

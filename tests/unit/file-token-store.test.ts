@@ -40,43 +40,43 @@ describe("FileTokenStore", () => {
     expect(() => new FileTokenStore({ dir, env: {} })).toThrowError(/encryption key/i);
   });
 
-  it("rejects malformed SUGU_TOKEN_ENC_KEY", () => {
-    expect(() => new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: "not-base64-32" } })).toThrow(
-      /32 bytes/i,
-    );
+  it("rejects malformed AGRIOPS_TOKEN_ENC_KEY", () => {
+    expect(
+      () => new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: "not-base64-32" } }),
+    ).toThrow(/32 bytes/i);
   });
 
   it("round-trips a token with a base64 key", async () => {
-    const store = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const store = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await store.save("user-1", "demo", SAMPLE);
     const back = await store.get("user-1", "demo");
     expect(back).toEqual(SAMPLE);
   });
 
   it("returns null for unknown (user, provider) pairs", async () => {
-    const store = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const store = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     expect(await store.get("user-x", "demo")).toBeNull();
   });
 
   it("persists across instances when the same key is supplied", async () => {
-    const a = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const a = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await a.save("user-2", "demo", SAMPLE);
-    const b = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const b = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     expect(await b.get("user-2", "demo")).toEqual(SAMPLE);
   });
 
   it("returns null instead of throwing when the wrong key is used", async () => {
-    const a = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const a = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await a.save("user-3", "demo", SAMPLE);
     const wrong = new FileTokenStore({
       dir,
-      env: { SUGU_TOKEN_ENC_KEY: randomBytes(32).toString("base64") },
+      env: { AGRIOPS_TOKEN_ENC_KEY: randomBytes(32).toString("base64") },
     });
     expect(await wrong.get("user-3", "demo")).toBeNull();
   });
 
   it("never leaks plaintext tokens to disk", async () => {
-    const store = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const store = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await store.save("user-4", "demo", SAMPLE);
     const fs = await import("node:fs/promises");
     const files = (await fs.readdir(dir)).filter((f) => f.endsWith(".bin"));
@@ -88,7 +88,7 @@ describe("FileTokenStore", () => {
   });
 
   it("treats a tampered ciphertext as absent (auth tag check)", async () => {
-    const store = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const store = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await store.save("user-5", "demo", SAMPLE);
     const fs = await import("node:fs/promises");
     const file = (await fs.readdir(dir)).find((f) => f.endsWith(".bin"));
@@ -103,7 +103,7 @@ describe("FileTokenStore", () => {
   });
 
   it("derives a stable key from a passphrase + salt", async () => {
-    const env = { SUGU_TOKEN_ENC_PASSPHRASE: "correct horse battery staple" };
+    const env = { AGRIOPS_TOKEN_ENC_PASSPHRASE: "correct horse battery staple" };
     const a = new FileTokenStore({ dir, env });
     await a.save("user-6", "demo", SAMPLE);
     const b = new FileTokenStore({ dir, env });
@@ -111,7 +111,7 @@ describe("FileTokenStore", () => {
   });
 
   it("delete() removes the persisted ciphertext", async () => {
-    const store = new FileTokenStore({ dir, env: { SUGU_TOKEN_ENC_KEY: KEY_B64 } });
+    const store = new FileTokenStore({ dir, env: { AGRIOPS_TOKEN_ENC_KEY: KEY_B64 } });
     await store.save("user-7", "demo", SAMPLE);
     expect(await store.get("user-7", "demo")).not.toBeNull();
     await store.delete("user-7", "demo");

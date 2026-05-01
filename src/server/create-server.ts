@@ -14,7 +14,7 @@ import { registerAllTools } from "../tools/_registry.js";
 import type { Deps } from "./deps.js";
 import { type RegisteredSurface, emptyRegisteredSurface } from "./surface-catalog.js";
 
-const SERVER_NAME = "sugu-agri-field";
+const SERVER_NAME = "agriops-mcp";
 
 export interface CreateServerOptions {
   config: Config;
@@ -94,10 +94,10 @@ export function createServer(options: CreateServerOptions): {
     {
       name: SERVER_NAME,
       version,
-      title: "SuguAgriField",
+      title: "AgriOps MCP",
       description:
         "Japanese agricultural data (farmland, weather, pesticides) for SSW workforce dispatching. Reference MCP server (Apache-2.0).",
-      websiteUrl: "https://github.com/WIN-kagoshima/sugu-agri-field",
+      websiteUrl: "https://github.com/WIN-kagoshima/agriops-mcp",
     },
     {
       capabilities: {

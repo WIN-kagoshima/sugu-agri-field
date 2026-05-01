@@ -1,7 +1,7 @@
-# SuguAgriField MCP — Operator runbook
+# AgriOps MCP — Operator runbook
 
 This document is the source of truth for deploying, operating, and
-incident-responding the SuguAgriField MCP server on Google Cloud Run.
+incident-responding the AgriOps MCP server on Google Cloud Run.
 
 It is opinionated: pieces marked **REQUIRED** are non-negotiable for a
 production-grade rollout; pieces marked **OPTIONAL** can be deferred to
@@ -14,7 +14,7 @@ later phases.
 | Item | Status | Notes |
 | --- | --- | --- |
 | GCP project & billing account | REQUIRED | Use a dedicated project — Cloud Run, Secret Manager, Cloud Build, Artifact Registry, Cloud Logging are all enabled per project. |
-| Domain + TLS cert | REQUIRED | Register `MCP_BASE_URL` (e.g. `https://mcp.sugu-agri.example.com`) and provision a managed cert via Cloud Run domain mapping or Global Load Balancer. |
+| Domain + TLS cert | REQUIRED | Register `MCP_BASE_URL` (e.g. `https://mcp.agriops.example.com`) and provision a managed cert via Cloud Run domain mapping or Global Load Balancer. |
 | GitHub repo with branch protection | REQUIRED | `main` only via PR + CI green. The `release.yml` workflow gates artifacts on the same. |
 | Node.js 20 + npm locally | REQUIRED | `node --version` ≥ 20.0 and `npm --version` ≥ 10. |
 
@@ -32,18 +32,18 @@ account, Secret Manager entries, and whether the Cloud Run service already
 exists. Failed checks print copy-pasteable fix commands.
 
 ```bash
-PROJECT=sugu-agri-prod
+PROJECT=agriops-prod
 npm run deploy:preflight -- --project=${PROJECT}
 ```
 
 ### 2.1 Create the runtime service account
 
 ```bash
-PROJECT=sugu-agri-prod
-SA=sugu-agri-runtime@${PROJECT}.iam.gserviceaccount.com
+PROJECT=agriops-prod
+SA=agriops-runtime@${PROJECT}.iam.gserviceaccount.com
 
-gcloud iam service-accounts create sugu-agri-runtime \
-  --display-name="SuguAgriField MCP runtime" \
+gcloud iam service-accounts create agriops-runtime \
+  --display-name="AgriOps MCP runtime" \
   --project=${PROJECT}
 
 # Logging + monitoring
@@ -57,21 +57,21 @@ gcloud projects add-iam-policy-binding ${PROJECT} \
 
 ```bash
 node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))" \
-  | gcloud secrets create sugu-token-enc-key --data-file=- --project=${PROJECT}
+  | gcloud secrets create agriops-token-enc-key --data-file=- --project=${PROJECT}
 
-gcloud secrets add-iam-policy-binding sugu-token-enc-key \
+gcloud secrets add-iam-policy-binding agriops-token-enc-key \
   --member=serviceAccount:${SA} \
   --role=roles/secretmanager.secretAccessor \
   --project=${PROJECT}
 ```
 
-Repeat for `sugu-session-cookie-secret` (32 bytes hex):
+Repeat for `agriops-session-cookie-secret` (32 bytes hex):
 
 ```bash
 node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))" \
-  | gcloud secrets create sugu-session-cookie-secret --data-file=- --project=${PROJECT}
+  | gcloud secrets create agriops-session-cookie-secret --data-file=- --project=${PROJECT}
 
-gcloud secrets add-iam-policy-binding sugu-session-cookie-secret \
+gcloud secrets add-iam-policy-binding agriops-session-cookie-secret \
   --member=serviceAccount:${SA} \
   --role=roles/secretmanager.secretAccessor \
   --project=${PROJECT}
@@ -80,20 +80,20 @@ gcloud secrets add-iam-policy-binding sugu-session-cookie-secret \
 ### 2.3 Build & deploy
 
 ```bash
-gcloud artifacts repositories create sugu-mcp \
+gcloud artifacts repositories create agriops-mcp \
   --repository-format=docker \
   --location=asia-northeast1 \
-  --description="SuguAgriField MCP images" \
+  --description="AgriOps MCP images" \
   --project=${PROJECT}
 
 gcloud builds submit \
   --config cloudbuild.yaml \
   --project=${PROJECT} \
   --region=asia-northeast1 \
-  --substitutions=_MCP_BASE_URL=https://mcp.sugu-agri.example.com
+  --substitutions=_MCP_BASE_URL=https://mcp.agriops.example.com
 
-gcloud run deploy sugu-agri-field \
-  --image=asia-northeast1-docker.pkg.dev/${PROJECT}/sugu-mcp/sugu-agri-field:latest \
+gcloud run deploy agriops-mcp \
+  --image=asia-northeast1-docker.pkg.dev/${PROJECT}/agriops-mcp/agriops-mcp:latest \
   --region=asia-northeast1 \
   --service-account=${SA} \
   --min-instances=0 \
@@ -102,8 +102,8 @@ gcloud run deploy sugu-agri-field \
   --cpu=1 \
   --concurrency=80 \
   --timeout=60s \
-  --set-env-vars=MCP_BASE_URL=https://mcp.sugu-agri.example.com,LOG_LEVEL=info,SUGU_TRUST_PROXY=1,SUGU_RATE_RPS=15,SUGU_RATE_BURST=45 \
-  --set-secrets=SUGU_TOKEN_ENC_KEY=sugu-token-enc-key:latest,SESSION_COOKIE_SECRET=sugu-session-cookie-secret:latest \
+  --set-env-vars=MCP_BASE_URL=https://mcp.agriops.example.com,LOG_LEVEL=info,AGRIOPS_TRUST_PROXY=1,AGRIOPS_RATE_RPS=15,AGRIOPS_RATE_BURST=45 \
+  --set-secrets=AGRIOPS_TOKEN_ENC_KEY=agriops-token-enc-key:latest,SESSION_COOKIE_SECRET=agriops-session-cookie-secret:latest \
   --allow-unauthenticated \
   --project=${PROJECT}
 ```
@@ -111,7 +111,7 @@ gcloud run deploy sugu-agri-field \
 ### 2.4 Smoke test the deploy
 
 ```bash
-BASE=https://mcp.sugu-agri.example.com
+BASE=https://mcp.agriops.example.com
 curl -sS ${BASE}/healthz | jq .
 curl -sS ${BASE}/livez | jq .   # Equivalent liveness alias for Cloud Run smoke tests.
 curl -sS ${BASE}/readyz  | jq .
@@ -151,6 +151,24 @@ If your Google Cloud organization intercepts `/healthz`, use the equivalent
 npm run deploy:smoke -- --base-url=${BASE} --health-path=/livez --allow-not-ready --auth-bearer=${TOKEN}
 ```
 
+### 2.5 GitHub Actions deploy setup
+
+The GCP side is configured for GitHub OIDC / Workload Identity Federation. Add
+these repository or environment secrets in GitHub:
+
+| Secret | Value |
+| --- | --- |
+| `GCP_PROJECT_ID` | `mcp-win` |
+| `GCP_WIF_PROVIDER` | `projects/805887969415/locations/global/workloadIdentityPools/github-pool/providers/github-provider` |
+| `GCP_DEPLOYER_SERVICE_ACCOUNT` | `agriops-github-deployer@mcp-win.iam.gserviceaccount.com` |
+| `GCP_RUNTIME_SERVICE_ACCOUNT` | `agriops-runtime@mcp-win.iam.gserviceaccount.com` |
+| `MCP_BASE_URL` | `https://agriops-mcp-n5vdix22hq-an.a.run.app` |
+
+The deploy workflow runs Cloud Build and then executes `npm run deploy:smoke`
+with an identity token. Because organization policy currently blocks
+`allUsers`, the deployer service account has `roles/run.invoker` on the Cloud
+Run service.
+
 ---
 
 ## 3. Day-2 operations
@@ -167,6 +185,20 @@ npm run deploy:smoke -- --base-url=${BASE} --health-path=/livez --allow-not-read
 | `/connect/{provider}` | Phase 4 OAuth URL elicitation start. | (user-driven) |
 | `/callback/{provider}` | Phase 4 OAuth callback. | (provider-driven) |
 
+### 3.1.1 Synthetic monitoring
+
+Because `mcp-win` currently blocks `allUsers`, uptime checks must authenticate.
+The project has a Cloud Scheduler HTTP job:
+
+- Job: `agriops-mcp-livez`
+- Schedule: every 5 minutes
+- Target: `https://agriops-mcp-n5vdix22hq-an.a.run.app/livez`
+- Auth service account: `agriops-monitor@mcp-win.iam.gserviceaccount.com`
+
+Deployment-time deep checks are handled by `.github/workflows/deploy.yml`, which
+runs `npm run deploy:smoke` against `/livez`, `/readyz`, Server Card, and MCP
+`initialize`.
+
 ### 3.2 Configuration knobs (env vars)
 
 | Var | Default | Notes |
@@ -174,13 +206,13 @@ npm run deploy:smoke -- --base-url=${BASE} --health-path=/livez --allow-not-read
 | `PORT` | `3001` | Cloud Run sets this automatically. |
 | `MCP_BASE_URL` | (required) | Public URL clients reach the server at. Used in Server Card and OAuth redirects. |
 | `LOG_LEVEL` | `info` | `debug`/`info`/`warn`/`error`. |
-| `SUGU_TRUST_PROXY` | `1` | Hops to trust for `req.ip` / X-Forwarded-For. Cloud Run = `1`. |
-| `SUGU_RATE_RPS` | `10` | Per-IP token refill rate. |
-| `SUGU_RATE_BURST` | `30` | Per-IP burst capacity. |
-| `SUGU_METRICS_BEARER` | (unset) | Bearer token gating `/metrics`. Leave unset for private-network scraping; set when scraping over the public ingress. |
-| `SUGU_TOKEN_ENC_KEY` | (unset) | 32-byte AES-256 key (base64). Required for production OAuth use. |
-| `SUGU_TOKEN_ENC_PASSPHRASE` | (unset) | Alternate to `SUGU_TOKEN_ENC_KEY`; scrypt-derived key. |
-| `SUGU_TOKEN_DIR` | `./.tokens` | Where the encrypted token files live. |
+| `AGRIOPS_TRUST_PROXY` | `1` | Hops to trust for `req.ip` / X-Forwarded-For. Cloud Run = `1`. |
+| `AGRIOPS_RATE_RPS` | `10` | Per-IP token refill rate. |
+| `AGRIOPS_RATE_BURST` | `30` | Per-IP burst capacity. |
+| `AGRIOPS_METRICS_BEARER` | (unset) | Bearer token gating `/metrics`. Leave unset for private-network scraping; set when scraping over the public ingress. |
+| `AGRIOPS_TOKEN_ENC_KEY` | (unset) | 32-byte AES-256 key (base64). Required for production OAuth use. |
+| `AGRIOPS_TOKEN_ENC_PASSPHRASE` | (unset) | Alternate to `AGRIOPS_TOKEN_ENC_KEY`; scrypt-derived key. |
+| `AGRIOPS_TOKEN_DIR` | `./.tokens` | Where the encrypted token files live. |
 | `SESSION_COOKIE_SECRET` | (required for HTTP) | Signs the anti-phishing session cookie. |
 | `EMAFF_SNAPSHOT_PATH` | `./snapshots/emaff-fude-kagoshima.sqlite` | Phase 1 farmland snapshot. |
 | `FAMIC_SNAPSHOT_PATH` | `./snapshots/famic-pesticide-2026.sqlite` | Phase 1 pesticide snapshot. |
@@ -224,7 +256,7 @@ Recommended Cloud Monitoring SLOs:
      next instance, then check Cloud Run revision health.
    - 503 from `/readyz`: an adapter is broken — see §6.
 2. Are clients reporting 429? Check `rate_limited_total` rate. Tune
-   `SUGU_RATE_RPS` / `SUGU_RATE_BURST`, or migrate to a Memorystore
+   `AGRIOPS_RATE_RPS` / `AGRIOPS_RATE_BURST`, or migrate to a Memorystore
    limiter for cross-instance fairness.
 3. Are clients reporting 500 with a `requestId`? Pull logs by
    `jsonPayload.requestId="<id>"` and look at the most-recent
@@ -238,7 +270,7 @@ Recommended Cloud Monitoring SLOs:
 | --- | --- | --- |
 | 421 Misdirected Request | DNS rebinding allowlist mismatch | Set `MCP_BASE_URL` to the exact public URL Cloud Run serves at. |
 | 503 from `/readyz` with `emaff` / `famic` ok=false | Snapshot missing in container | Rebuild image with `npm run snapshots:build` first, or mount snapshots from GCS. |
-| 401 from `/metrics` | Wrong / missing `SUGU_METRICS_BEARER` | Update Prometheus job's bearer token. |
+| 401 from `/metrics` | Wrong / missing `AGRIOPS_METRICS_BEARER` | Update Prometheus job's bearer token. |
 | Tool returns "safety cap" error | Single tool produced > 1 MiB JSON | Lower `limit`, narrow filters, or paginate via `cursor`. |
 | Rate-limit warnings on legitimate user | Single IP hosting many users | Migrate to a per-user limit keyed off OAuth `sub`, not IP. |
 
@@ -248,8 +280,8 @@ Cloud Run revisions are immutable. Rollback = retarget traffic to a
 prior revision:
 
 ```bash
-gcloud run services update-traffic sugu-agri-field \
-  --to-revisions=sugu-agri-field-00012-abc=100 \
+gcloud run services update-traffic agriops-mcp \
+  --to-revisions=agriops-mcp-00012-abc=100 \
   --region=asia-northeast1 \
   --project=${PROJECT}
 ```
@@ -284,12 +316,12 @@ schedule. The release workflow re-runs everything on the tag.
 1. Generate a new key:
    ```bash
    node -e "console.log(require('node:crypto').randomBytes(32).toString('base64'))" \
-     | gcloud secrets versions add sugu-token-enc-key --data-file=- --project=${PROJECT}
+     | gcloud secrets versions add agriops-token-enc-key --data-file=- --project=${PROJECT}
    ```
 2. Roll the Cloud Run revision (no env-var change; Secret Manager auto-reads `:latest`):
    ```bash
-   gcloud run services update sugu-agri-field --region=asia-northeast1 \
-     --update-secrets=SUGU_TOKEN_ENC_KEY=sugu-token-enc-key:latest \
+   gcloud run services update agriops-mcp --region=asia-northeast1 \
+     --update-secrets=AGRIOPS_TOKEN_ENC_KEY=agriops-token-enc-key:latest \
      --project=${PROJECT}
    ```
 3. **Existing tokens become unreadable** with the new key. The store
@@ -297,20 +329,31 @@ schedule. The release workflow re-runs everything on the tag.
    maintenance window first.
 
 For zero-downtime rotation, switch to the (planned) two-key
-`FileTokenStore` mode (`SUGU_TOKEN_ENC_KEY_PRIMARY` +
-`SUGU_TOKEN_ENC_KEY_SECONDARY`) when it ships.
+`FileTokenStore` mode (`AGRIOPS_TOKEN_ENC_KEY_PRIMARY` +
+`AGRIOPS_TOKEN_ENC_KEY_SECONDARY`) when it ships.
 
 ### 6.2 Snapshot rebuild
 
 eMAFF and FAMIC are rebuilt quarterly. The pipeline is reproducible:
 
 ```bash
-npm run snapshots:build -- --source emaff --year 2026
-npm run snapshots:build -- --source famic --year 2026
+npm run snapshots:build
 ```
 
-Push the resulting `*.sqlite` to a GCS bucket, then mount via Cloud
-Run's `--add-volume` flag (Beta) or rebuild the container image.
+Inputs:
+
+- eMAFF: complete the official questionnaire on https://open.fude.maff.go.jp/,
+  download the Kagoshima GeoJSON, and place it at
+  `snapshots/raw/emaff-fude-kagoshima.geojson`.
+- FAMIC: download the official CSV ZIPs from
+  https://www.acis.famic.go.jp/ddata/index2.htm and extract `R*.csv` under
+  `snapshots/raw/famic*/`, or place a normalized CSV at
+  `snapshots/raw/famic-pesticide.csv`.
+
+The resulting `*.sqlite` files stay untracked, but `.gcloudignore` allows them
+into Cloud Build source uploads so first-party deploys can bake snapshots into
+the image. For larger datasets, push snapshots to a GCS bucket and mount via
+Cloud Run volumes instead.
 
 ### 6.3 Dependency updates
 
@@ -333,6 +376,6 @@ grouped). Merge the green-CI PRs; reject anything that fails
 
 ## 8. Contact
 
-- On-call: see internal PagerDuty rotation `sugu-agri-mcp`.
-- Security: see `SECURITY.md` for the private reporting channel (`security@sugukuru.dev`, placeholder — replace before publishing).
+- On-call: see internal PagerDuty rotation `agriops-mcp`.
+- Security: see `SECURITY.md` for the private reporting channel (`security@agriops.dev`, placeholder — replace before publishing).
 - Spec questions: [`modelcontextprotocol/specification`](https://github.com/modelcontextprotocol/specification/issues).

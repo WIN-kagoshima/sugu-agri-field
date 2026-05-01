@@ -7,7 +7,7 @@ body:
       value: |
         Thanks for taking the time to report a bug.
 
-        **Security issues should NOT be filed here.** See [SECURITY.md](https://github.com/WIN-kagoshima/sugu-agri-field/blob/main/SECURITY.md) for the private reporting channel.
+        **Security issues should NOT be filed here.** See [SECURITY.md](https://github.com/WIN-kagoshima/agriops-mcp/blob/main/SECURITY.md) for the private reporting channel.
 
   - type: input
     id: version
@@ -84,5 +84,5 @@ body:
       options:
         - label: I have searched existing issues.
           required: true
-        - label: I have read [docs/data-license.md](https://github.com/WIN-kagoshima/sugu-agri-field/blob/main/docs/data-license.md) if my issue concerns external data.
+        - label: I have read [docs/data-license.md](https://github.com/WIN-kagoshima/agriops-mcp/blob/main/docs/data-license.md) if my issue concerns external data.
           required: false

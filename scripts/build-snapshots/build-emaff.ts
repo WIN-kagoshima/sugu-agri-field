@@ -12,16 +12,21 @@ interface EmaffFeature {
   type: "Feature";
   properties: {
     field_id?: string;
+    polygon_uuid?: string;
     polygon_id?: string;
     prefecture_code?: string;
     city_code?: string;
+    local_government_cd?: string;
     address?: string;
     area_m2?: number;
     registered_crop?: string | null;
+    land_type?: string | number | null;
+    point_lat?: number;
+    point_lng?: number;
   };
   geometry: {
-    type: "Point" | "Polygon";
-    coordinates: number[] | number[][][];
+    type: "Point" | "Polygon" | "MultiPolygon";
+    coordinates: number[] | number[][][] | number[][][][];
   };
 }
 
@@ -117,19 +122,22 @@ export async function buildEmaffSnapshot(options: BuildEmaffOptions): Promise<Bu
       let count = 0;
       for (const f of features) {
         const props = f.properties ?? {};
-        if (!props.field_id || !props.prefecture_code) continue;
+        const localGovernmentCode = props.local_government_cd ?? props.city_code ?? "";
+        const fieldId = props.field_id ?? props.polygon_uuid;
+        const prefectureCode = props.prefecture_code ?? localGovernmentCode.slice(0, 2);
+        if (!fieldId || !prefectureCode) continue;
         const centroid = computeCentroid(f.geometry);
         if (!centroid) continue;
         const info = insertField.run({
-          field_id: props.field_id,
-          polygon_id: props.polygon_id ?? props.field_id,
-          prefecture_code: props.prefecture_code,
-          city_code: props.city_code ?? "",
+          field_id: fieldId,
+          polygon_id: props.polygon_id ?? fieldId,
+          prefecture_code: prefectureCode,
+          city_code: props.city_code ?? localGovernmentCode,
           address: props.address ?? null,
-          centroid_lat: centroid.lat,
-          centroid_lng: centroid.lng,
+          centroid_lat: props.point_lat ?? centroid.lat,
+          centroid_lng: props.point_lng ?? centroid.lng,
           area_m2: props.area_m2 ?? 0,
-          registered_crop: props.registered_crop ?? null,
+          registered_crop: props.registered_crop ?? normalizeLandType(props.land_type),
         });
         const rowid = Number(info.lastInsertRowid);
         insertRtree.run(rowid, centroid.lat, centroid.lat, centroid.lng, centroid.lng);
@@ -158,14 +166,31 @@ function computeCentroid(geom: EmaffFeature["geometry"]): { lat: number; lng: nu
   }
   if (geom.type === "Polygon") {
     const ring = (geom.coordinates as number[][][])[0];
-    if (!ring || ring.length === 0) return null;
-    let lng = 0;
-    let lat = 0;
-    for (const point of ring) {
-      lng += point[0] ?? 0;
-      lat += point[1] ?? 0;
-    }
-    return { lng: lng / ring.length, lat: lat / ring.length };
+    return centroidOfRing(ring);
+  }
+  if (geom.type === "MultiPolygon") {
+    const polygon = (geom.coordinates as number[][][][])[0];
+    const ring = polygon?.[0];
+    return centroidOfRing(ring);
   }
   return null;
+}
+
+function centroidOfRing(ring: number[][] | undefined): { lat: number; lng: number } | null {
+  if (!ring || ring.length === 0) return null;
+  let lng = 0;
+  let lat = 0;
+  for (const point of ring) {
+    lng += point[0] ?? 0;
+    lat += point[1] ?? 0;
+  }
+  return { lng: lng / ring.length, lat: lat / ring.length };
+}
+
+function normalizeLandType(value: string | number | null | undefined): string | null {
+  if (value === undefined || value === null || value === "") return null;
+  const text = String(value);
+  if (text === "100") return "田";
+  if (text === "200") return "畑";
+  return text;
 }

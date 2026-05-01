@@ -53,7 +53,7 @@ function parseArgs(argv: string[]): Options {
 }
 
 function printHelp(): void {
-  console.log(`SuguAgriField deployed-service smoke test
+  console.log(`AgriOps MCP deployed-service smoke test
 
 Usage:
   npm run deploy:smoke -- --base-url https://SERVICE-xyz.a.run.app
@@ -154,7 +154,7 @@ async function main(): Promise<void> {
       const endpoints = isRecord(parsed.endpoints) ? parsed.endpoints : {};
       cardOk =
         card.status === 200 &&
-        parsed.name === "SuguAgriField" &&
+        parsed.name === "AgriOps MCP" &&
         parsed.version !== undefined &&
         endpoints.mcp === `${baseUrl}/mcp`;
       cardDetail = `status=${card.status}, name=${String(parsed.name)}, mcp=${String(endpoints.mcp)}`;
@@ -179,7 +179,7 @@ async function main(): Promise<void> {
       params: {
         protocolVersion: "2025-11-25",
         capabilities: {},
-        clientInfo: { name: "sugu-deploy-smoke", version: "0.0.1" },
+        clientInfo: { name: "agriops-deploy-smoke", version: "0.0.1" },
       },
     }),
   });
@@ -190,7 +190,7 @@ async function main(): Promise<void> {
     if (isRecord(parsed)) {
       const response = isRecord(parsed.result) ? parsed.result : parsed;
       const serverInfo = isRecord(response.serverInfo) ? response.serverInfo : {};
-      initOk = initialize.status === 200 && serverInfo.name === "sugu-agri-field";
+      initOk = initialize.status === 200 && serverInfo.name === "agriops-mcp";
       initDetail = `status=${initialize.status}, server=${String(serverInfo.name)}, contentType=${
         initialize.contentType
       }`;
@@ -213,7 +213,7 @@ async function main(): Promise<void> {
     );
   }
 
-  console.log(`SuguAgriField deploy smoke: ${baseUrl}`);
+  console.log(`AgriOps MCP deploy smoke: ${baseUrl}`);
   let failed = 0;
   for (const item of results) {
     const marker = item.ok ? "PASS" : "FAIL";

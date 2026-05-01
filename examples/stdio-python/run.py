@@ -1,10 +1,10 @@
-"""Minimal Python stdio client for SuguAgriField MCP.
+"""Minimal Python stdio client for AgriOps MCP.
 
 Run with:
 
     python run.py
 
-Targets ../../dist/server.js. Override with the SUGU_SERVER env var
+Targets ../../dist/server.js. Override with the AGRIOPS_SERVER env var
 or pass it as argv[1].
 """
 from __future__ import annotations
@@ -24,7 +24,7 @@ async def main() -> int:
     server_path = (
         Path(sys.argv[1]).resolve()
         if len(sys.argv) > 1
-        else Path(os.environ.get("SUGU_SERVER", str(DEFAULT_SERVER))).resolve()
+        else Path(os.environ.get("AGRIOPS_SERVER", str(DEFAULT_SERVER))).resolve()
     )
     if not server_path.exists():
         print(f"server entrypoint not found: {server_path}", file=sys.stderr)

@@ -1,9 +1,9 @@
 ---
-description: SuguAgriField project overview — always apply
+description: AgriOps MCP project overview — always apply
 alwaysApply: true
 ---
 
-# SuguAgriField MCP server
+# AgriOps MCP server
 
 Reference implementation of an MCP server that exposes Japanese agricultural data — farmland polygons (eMAFF), 1 km weather (Open-Meteo / JMA), and pesticide registrations (FAMIC) — to AI agents.
 
@@ -15,7 +15,7 @@ Reference implementation of an MCP server that exposes Japanese agricultural dat
 - Phase 2: 5 user-controlled prompts (slash commands).
 - Phase 3: Form-mode elicitation when input is missing.
 - Phase 4: URL-mode elicitation + OAuth Client Credentials.
-- Phase 5: MCP Apps UI dashboard (`ui://sugu-agri/dashboard.html`).
+- Phase 5: MCP Apps UI dashboard (`ui://agriops/dashboard.html`).
 
 ## Authoritative specs
 

@@ -3,11 +3,11 @@ import { createMetrics } from "../../src/server/metrics.js";
 
 describe("metrics — Prometheus exposition", () => {
   it("includes default labels on every series", () => {
-    const m = createMetrics({ defaultLabels: { service: "sugu", version: "0.6.0" } });
+    const m = createMetrics({ defaultLabels: { service: "agriops", version: "0.6.0" } });
     m.inc("mcp_requests_total");
     m.inc("tool_calls_total", { tool: "get_weather_1km", outcome: "ok" });
     const text = m.expose();
-    expect(text).toMatch(/mcp_requests_total\{service="sugu",version="0\.6\.0"\} 1/);
+    expect(text).toMatch(/mcp_requests_total\{service="agriops",version="0\.6\.0"\} 1/);
     expect(text).toMatch(/tool="get_weather_1km"/);
     expect(text).toMatch(/outcome="ok"/);
   });

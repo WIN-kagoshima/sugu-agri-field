@@ -79,8 +79,8 @@ jobs:
       - name: Stage release assets
         run: |
           mkdir -p release-assets
-          cp dist/ui/dashboard.html release-assets/sugu-agri-field-dashboard-${GITHUB_REF_NAME}.html
-          (cd dist && tar -czf "../release-assets/sugu-agri-field-server-${GITHUB_REF_NAME}.tar.gz" .)
+          cp dist/ui/dashboard.html release-assets/agriops-mcp-dashboard-${GITHUB_REF_NAME}.html
+          (cd dist && tar -czf "../release-assets/agriops-mcp-server-${GITHUB_REF_NAME}.tar.gz" .)
           shasum -a 256 release-assets/* > release-assets/SHA256SUMS
 
       - name: Create GitHub Release
@@ -92,8 +92,8 @@ jobs:
           draft: false
           prerelease: ${{ contains(github.ref_name, '-') }}
           files: |
-            release-assets/sugu-agri-field-dashboard-${{ github.ref_name }}.html
-            release-assets/sugu-agri-field-server-${{ github.ref_name }}.tar.gz
+            release-assets/agriops-mcp-dashboard-${{ github.ref_name }}.html
+            release-assets/agriops-mcp-server-${{ github.ref_name }}.tar.gz
             release-assets/SHA256SUMS
 
       # Set the repository variable PUBLISH_TO_NPM=true and the secret

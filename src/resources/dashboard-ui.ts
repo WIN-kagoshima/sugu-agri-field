@@ -7,7 +7,7 @@ import type { Deps } from "../server/deps.js";
 import { DASHBOARD_URI } from "../tools/open-dashboard.js";
 
 /**
- * Register the MCP Apps UI resource at `ui://sugu-agri/dashboard.html`.
+ * Register the MCP Apps UI resource at `ui://agriops/dashboard.html`.
  *
  * The HTML is produced by `npm run build:ui` (Vite + vite-plugin-singlefile)
  * into `dist/ui/dashboard.html`. If the bundle is missing (e.g. the user is
@@ -17,10 +17,10 @@ import { DASHBOARD_URI } from "../tools/open-dashboard.js";
  */
 export function registerDashboardUiResource(server: McpServer, deps: Deps): void {
   server.registerResource(
-    "sugu-agri-dashboard",
+    "agriops-dashboard",
     DASHBOARD_URI,
     {
-      title: "SuguAgriField map dashboard",
+      title: "AgriOps MCP map dashboard",
       description: "Single-file React + MapLibre GL UI bundle. Rendered inline by MCP Apps hosts.",
       mimeType: "text/html",
     },
@@ -73,7 +73,7 @@ function placeholderHtml(): string {
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>SuguAgriField — UI not built</title>
+  <title>AgriOps MCP — UI not built</title>
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; padding: 2rem; max-width: 40rem; margin: 0 auto; color: #222; }
@@ -82,7 +82,7 @@ function placeholderHtml(): string {
   </style>
 </head>
 <body>
-  <h1>SuguAgriField dashboard</h1>
+  <h1>AgriOps MCP dashboard</h1>
   <p>The interactive UI has not been built yet. Run:</p>
   <pre><code>npm run build:ui</code></pre>
   <p class="note">This placeholder is served when <code>dist/ui/dashboard.html</code> does not exist on the server filesystem.</p>

@@ -4,7 +4,7 @@ This file is the entry point for **AI coding assistants** (Cursor Composer/Agent
 
 ## What this project is
 
-`@sugukuru/sugu-agri-field` is an **MCP server** (Model Context Protocol) that exposes Japanese agricultural data — farmland polygons, weather, pesticide registrations — as tools, resources, prompts, and an MCP Apps UI dashboard.
+`@win-kagoshima/agriops-mcp` is an **MCP server** (Model Context Protocol) that exposes Japanese agricultural data — farmland polygons, weather, pesticide registrations — as tools, resources, prompts, and an MCP Apps UI dashboard.
 
 The audience is agricultural staffing companies that dispatch Specified Skilled Workers (特定技能 / SSW). The server is also a **reference implementation** of the official MCP spec, so spec compliance is a first-class goal.
 

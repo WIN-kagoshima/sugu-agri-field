@@ -1,6 +1,6 @@
 # curl + Streamable HTTP example
 
-Demonstrates that the SuguAgriField server is reachable from any
+Demonstrates that the AgriOps MCP server is reachable from any
 language by speaking plain JSON-RPC 2.0 over its `/mcp` endpoint.
 
 ## Start the server
@@ -25,7 +25,7 @@ The script runs three calls and dumps each response:
 
 1. `GET /.well-known/mcp-server.json` — Server Card.
 2. `POST /mcp` `tools/list` — list of registered tools.
-3. `POST /mcp` `tools/call get_weather_1km` for Sugukurukabe Field.
+3. `POST /mcp` `tools/call get_weather_1km` for AgriOpskabe Field.
 
 Notice how every response carries an `X-Request-Id` header. If the
 caller supplies one, the server reuses it — handy for tracing across

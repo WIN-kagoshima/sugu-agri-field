@@ -7,7 +7,7 @@ import { mountMockOAuthProvider } from "./mock-oauth.js";
 import { getRequestId } from "./request-id.js";
 import type { HttpServerOptions } from "./transport-http.js";
 
-const SESSION_COOKIE = "sugu_session";
+const SESSION_COOKIE = "agriops_session";
 
 export interface ConnectHandlerOptions extends HttpServerOptions {
   elicitationStore: ElicitationStore;

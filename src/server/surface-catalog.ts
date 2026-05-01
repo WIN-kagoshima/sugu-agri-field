@@ -218,8 +218,8 @@ export const PROMPT_METADATA: Record<string, PromptMetadata> = {
 };
 
 export const RESOURCE_METADATA: Record<string, ResourceMetadata> = {
-  "ui://sugu-agri/dashboard.html": {
-    title: "SuguAgriField map dashboard",
+  "ui://agriops/dashboard.html": {
+    title: "AgriOps MCP map dashboard",
     introduced: "0.5.0",
     mimeType: "text/html",
   },

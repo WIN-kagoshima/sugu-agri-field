@@ -12,7 +12,7 @@ export const meta: ToolMeta = {
   introducedInPhase: 5,
 };
 
-export const DASHBOARD_URI = "ui://sugu-agri/dashboard.html";
+export const DASHBOARD_URI = "ui://agriops/dashboard.html";
 
 export const inputSchema = z
   .object({
@@ -41,7 +41,7 @@ export function registerOpenDashboard(server: McpServer, deps: Deps): void {
   server.registerTool(
     meta.name,
     {
-      title: "Open the SuguAgriField map dashboard",
+      title: "Open the AgriOps MCP map dashboard",
       description:
         "Open the interactive map + weather dashboard. On MCP Apps hosts (Claude, ChatGPT) the UI renders inline; " +
         "on hosts without MCP Apps support a structured text summary is returned instead. Read-only.",
@@ -76,7 +76,7 @@ export function registerOpenDashboard(server: McpServer, deps: Deps): void {
           content: [
             {
               type: "text",
-              text: `Opening the SuguAgriField dashboard${
+              text: `Opening the AgriOps MCP dashboard${
                 parsed.data.initialPrefectureCode
                   ? ` focused on ${parsed.data.initialPrefectureCode}`
                   : ""
@@ -85,7 +85,7 @@ export function registerOpenDashboard(server: McpServer, deps: Deps): void {
             {
               type: "resource_link",
               uri: DASHBOARD_URI,
-              name: "SuguAgriField map dashboard",
+              name: "AgriOps MCP map dashboard",
               mimeType: "text/html",
             },
           ],

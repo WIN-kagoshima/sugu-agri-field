@@ -26,9 +26,9 @@ describe("HTTP transport ops sidecars", () => {
   let handle: Awaited<ReturnType<typeof startHttp>>;
 
   beforeAll(async () => {
-    process.env.SUGU_RATE_RPS = "2";
-    process.env.SUGU_RATE_BURST = "3";
-    process.env.SUGU_METRICS_BEARER = "test-bearer";
+    process.env.AGRIOPS_RATE_RPS = "2";
+    process.env.AGRIOPS_RATE_BURST = "3";
+    process.env.AGRIOPS_METRICS_BEARER = "test-bearer";
 
     const { server } = createServer({ config, logger, version: "0.6.0-test" });
     handle = await startHttp(server, {
@@ -41,9 +41,9 @@ describe("HTTP transport ops sidecars", () => {
 
   afterAll(async () => {
     await handle.stop();
-    process.env.SUGU_RATE_RPS = undefined;
-    process.env.SUGU_RATE_BURST = undefined;
-    process.env.SUGU_METRICS_BEARER = undefined;
+    process.env.AGRIOPS_RATE_RPS = undefined;
+    process.env.AGRIOPS_RATE_BURST = undefined;
+    process.env.AGRIOPS_METRICS_BEARER = undefined;
   });
 
   it("/healthz returns 200 with status ok while running", async () => {

@@ -1,7 +1,7 @@
-# SuguAgriField MCP — Client examples
+# AgriOps MCP — Client examples
 
-Three minimal clients that connect to the SuguAgriField MCP server,
-list the available tools, and call `get_weather_1km` for Sugukurukabe
+Three minimal clients that connect to the AgriOps MCP server,
+list the available tools, and call `get_weather_1km` for AgriOpskabe
 Field (鹿児島県, ~31.5N 130.5E).
 
 | Folder | Transport | What it shows |
@@ -17,8 +17,8 @@ exercise Phase 0 (`get_weather_1km`, Open-Meteo) only.
 ## Prerequisites
 
 ```bash
-git clone https://github.com/WIN-kagoshima/sugu-agri-field
-cd sugu-agri-field
+git clone https://github.com/WIN-kagoshima/agriops-mcp
+cd agriops-mcp
 npm install
 npm run build
 ```

@@ -1,9 +1,9 @@
-# SuguAgriField MCP
+# AgriOps MCP
 
-[![CI](https://github.com/WIN-kagoshima/sugu-agri-field/actions/workflows/ci.yml/badge.svg)](https://github.com/WIN-kagoshima/sugu-agri-field/actions/workflows/ci.yml)
-[![CodeQL](https://github.com/WIN-kagoshima/sugu-agri-field/actions/workflows/codeql.yml/badge.svg)](https://github.com/WIN-kagoshima/sugu-agri-field/actions/workflows/codeql.yml)
-[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/WIN-kagoshima/sugu-agri-field/badge)](https://securityscorecards.dev/viewer/?uri=github.com/WIN-kagoshima/sugu-agri-field)
-[![npm](https://img.shields.io/npm/v/@sugukuru/sugu-agri-field.svg)](https://www.npmjs.com/package/@sugukuru/sugu-agri-field)
+[![CI](https://github.com/WIN-kagoshima/agriops-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/WIN-kagoshima/agriops-mcp/actions/workflows/ci.yml)
+[![CodeQL](https://github.com/WIN-kagoshima/agriops-mcp/actions/workflows/codeql.yml/badge.svg)](https://github.com/WIN-kagoshima/agriops-mcp/actions/workflows/codeql.yml)
+[![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/WIN-kagoshima/agriops-mcp/badge)](https://securityscorecards.dev/viewer/?uri=github.com/WIN-kagoshima/agriops-mcp)
+[![npm](https://img.shields.io/npm/v/@win-kagoshima/agriops-mcp.svg)](https://www.npmjs.com/package/@win-kagoshima/agriops-mcp)
 [![License](https://img.shields.io/badge/license-Apache--2.0-blue.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-%E2%89%A520-339933?logo=node.js&logoColor=white)](https://nodejs.org/)
 [![MCP Spec](https://img.shields.io/badge/MCP-2025--11--25-7c3aed)](https://modelcontextprotocol.io/specification/2025-11-25/)
@@ -14,7 +14,7 @@
 >
 > 日本語: [README.ja.md](./README.ja.md)
 
-SuguAgriField exposes Japanese agricultural data — farmland polygons (eMAFF), 1 km mesh weather (Open-Meteo, JMA), and pesticide registrations (FAMIC) — to AI agents through MCP. The audience is staffing companies that dispatch Specified Skilled Workers (特定技能 / SSW) to farms.
+AgriOps MCP exposes Japanese agricultural data — farmland polygons (eMAFF), 1 km mesh weather (Open-Meteo, JMA), and pesticide registrations (FAMIC) — to AI agents through MCP. The audience is staffing companies that dispatch Specified Skilled Workers (特定技能 / SSW) to farms.
 
 ## Status
 
@@ -34,10 +34,10 @@ Pre-1.0, **experimental**. Tool names, prompt names, and resource URIs may chang
 ```mermaid
 flowchart LR
   host["AI host (Claude · Cursor · ChatGPT)"]
-  host -->|MCP| server["sugu-agri-field"]
+  host -->|MCP| server["agriops-mcp"]
   server --> tools["Tools"]
   server --> prompts["Prompts (Phase 2+)"]
-  server --> ui["ui://sugu-agri/dashboard.html (Phase 5)"]
+  server --> ui["ui://agriops/dashboard.html (Phase 5)"]
   tools --> openMeteo[(Open-Meteo)]
   tools --> emaff[("eMAFF SQLite snapshot")]
   tools --> famic[("FAMIC SQLite snapshot")]
@@ -48,8 +48,8 @@ flowchart LR
 Requires Node.js 20+ and npm (pnpm/yarn also work).
 
 ```bash
-git clone https://github.com/WIN-kagoshima/sugu-agri-field.git
-cd sugu-agri-field
+git clone https://github.com/WIN-kagoshima/agriops-mcp.git
+cd agriops-mcp
 npm install
 npm run build
 npm run dev   # starts stdio transport
@@ -62,9 +62,9 @@ Add to `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS)
 ```json
 {
   "mcpServers": {
-    "sugu-agri-field": {
+    "agriops-mcp": {
       "command": "node",
-      "args": ["/absolute/path/to/sugu-agri-field/dist/server.js", "--stdio"]
+      "args": ["/absolute/path/to/agriops-mcp/dist/server.js", "--stdio"]
     }
   }
 }
@@ -76,9 +76,9 @@ Settings → MCP → Add MCP server:
 
 ```json
 {
-  "name": "sugu-agri-field",
+  "name": "agriops-mcp",
   "command": "node",
-  "args": ["/absolute/path/to/sugu-agri-field/dist/server.js", "--stdio"]
+  "args": ["/absolute/path/to/agriops-mcp/dist/server.js", "--stdio"]
 }
 ```
 
@@ -103,7 +103,7 @@ The server exposes:
 - `GET /.well-known/mcp-server.json` — Server Card for registries.
 - `GET /healthz` — liveness probe (503 while draining).
 - `GET /readyz` — readiness probe with per-adapter status.
-- `GET /metrics` — Prometheus exposition (bearer-token gated when `SUGU_METRICS_BEARER` is set).
+- `GET /metrics` — Prometheus exposition (bearer-token gated when `AGRIOPS_METRICS_BEARER` is set).
 
 Production deployment, key rotation, incident response, and SLO targets are documented in [`docs/runbook.md`](docs/runbook.md).
 
@@ -163,4 +163,4 @@ See [CONTRIBUTING.md](./CONTRIBUTING.md). All contributions must be Apache-2.0 c
 
 ## License
 
-Apache-2.0. © 2026 Sugukuru Inc.
+Apache-2.0. © 2026 WIN Kagoshima

@@ -15,8 +15,8 @@ import type { StoredToken, TokenStore } from "./token-store.js";
  * filename derived from `(provider, userId)`.
  *
  * Encryption key:
- *   - Provided via `SUGU_TOKEN_ENC_KEY` (base64-encoded 32 bytes), OR
- *   - Provided as a passphrase via `SUGU_TOKEN_ENC_PASSPHRASE`, in which
+ *   - Provided via `AGRIOPS_TOKEN_ENC_KEY` (base64-encoded 32 bytes), OR
+ *   - Provided as a passphrase via `AGRIOPS_TOKEN_ENC_PASSPHRASE`, in which
  *     case we derive a 32-byte key with scrypt + a salt persisted in
  *     `{dir}/.salt`. The salt is created on first run.
  *
@@ -26,7 +26,7 @@ import type { StoredToken, TokenStore } from "./token-store.js";
  * This is NOT a Secret Manager replacement — keys still live on disk
  * encryption-of-rest dependent. For Cloud Run prod, lift this into
  * Google Secret Manager (`secretmanager.googleapis.com/v1/projects/.../
- * secrets/sugu-token-key/versions/latest`) and inject as an env var.
+ * secrets/agriops-token-key/versions/latest`) and inject as an env var.
  */
 
 const NONCE_LEN = 12;
@@ -103,22 +103,22 @@ export class FileTokenStore implements TokenStore {
 }
 
 function resolveKeySync(dir: string, env: NodeJS.ProcessEnv): Buffer {
-  const direct = env.SUGU_TOKEN_ENC_KEY;
+  const direct = env.AGRIOPS_TOKEN_ENC_KEY ?? env.SUGU_TOKEN_ENC_KEY;
   if (direct) {
     const buf = Buffer.from(direct, "base64");
     if (buf.length !== 32) {
       throw new Error(
-        "SUGU_TOKEN_ENC_KEY must decode to exactly 32 bytes (base64-encoded AES-256 key).",
+        "AGRIOPS_TOKEN_ENC_KEY must decode to exactly 32 bytes (base64-encoded AES-256 key).",
       );
     }
     return buf;
   }
-  const passphrase = env.SUGU_TOKEN_ENC_PASSPHRASE;
+  const passphrase = env.AGRIOPS_TOKEN_ENC_PASSPHRASE ?? env.SUGU_TOKEN_ENC_PASSPHRASE;
   if (passphrase) {
     return deriveKeyWithSaltSync(dir, passphrase);
   }
   throw new Error(
-    "FileTokenStore requires SUGU_TOKEN_ENC_KEY (32-byte base64 key) or SUGU_TOKEN_ENC_PASSPHRASE; refusing to run with no encryption key.",
+    "FileTokenStore requires AGRIOPS_TOKEN_ENC_KEY (32-byte base64 key) or AGRIOPS_TOKEN_ENC_PASSPHRASE; refusing to run with no encryption key.",
   );
 }
 

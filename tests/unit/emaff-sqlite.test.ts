@@ -7,7 +7,7 @@ import { buildEmaffSnapshot } from "../../scripts/build-snapshots/build-emaff.js
 import { EmaffSqliteAdapter } from "../../src/adapters/emaff-fude.js";
 
 describe("EmaffSqliteAdapter", () => {
-  const tmpDir = join(tmpdir(), `sugu-agri-field-emaff-${process.pid}`);
+  const tmpDir = join(tmpdir(), `agriops-mcp-emaff-${process.pid}`);
   const dbPath = join(tmpDir, "emaff.sqlite");
   let adapter: EmaffSqliteAdapter;
 

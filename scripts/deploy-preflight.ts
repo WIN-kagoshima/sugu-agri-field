@@ -28,9 +28,9 @@ const GCLOUD = "gcloud";
 function parseArgs(argv: string[]): Options {
   const options: Options = {
     region: "asia-northeast1",
-    repository: "sugu-mcp",
-    tokenSecret: "sugu-token-enc-key",
-    sessionSecret: "sugu-session-cookie-secret",
+    repository: "agriops-mcp",
+    tokenSecret: "agriops-token-enc-key",
+    sessionSecret: "agriops-session-cookie-secret",
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
@@ -75,7 +75,7 @@ function parseArgs(argv: string[]): Options {
 }
 
 function printHelp(): void {
-  console.log(`SuguAgriField Cloud Run deploy preflight
+  console.log(`AgriOps MCP Cloud Run deploy preflight
 
 Usage:
   npm run deploy:preflight -- --project mcp-win
@@ -83,10 +83,10 @@ Usage:
 Options:
   --project <id>                    GCP project ID. Defaults to gcloud config project.
   --region <region>                 Region. Default: asia-northeast1.
-  --repo <name>                     Artifact Registry repo. Default: sugu-mcp.
+  --repo <name>                     Artifact Registry repo. Default: agriops-mcp.
   --runtime-service-account <email> Runtime service account email.
-  --token-secret <name>             Secret Manager token key. Default: sugu-token-enc-key.
-  --session-secret <name>           Secret Manager cookie key. Default: sugu-session-cookie-secret.
+  --token-secret <name>             Secret Manager token key. Default: agriops-token-enc-key.
+  --session-secret <name>           Secret Manager cookie key. Default: agriops-session-cookie-secret.
 `);
 }
 
@@ -124,7 +124,7 @@ function main(): void {
     throw new Error("No project supplied and no gcloud config project is set.");
   }
   const runtimeSa =
-    options.runtimeServiceAccount ?? `sugu-agri-runtime@${project}.iam.gserviceaccount.com`;
+    options.runtimeServiceAccount ?? `agriops-runtime@${project}.iam.gserviceaccount.com`;
   const results: CheckResult[] = [];
 
   const account = tryGcloud(["auth", "list", "--filter=status:ACTIVE", "--format=value(account)"]);
@@ -187,7 +187,7 @@ function main(): void {
       options.repository,
       "--repository-format=docker",
       `--location=${options.region}`,
-      '--description="SuguAgriField MCP images"',
+      '--description="AgriOps MCP images"',
       `--project=${project}`,
     ]),
   });
@@ -205,8 +205,8 @@ function main(): void {
     ok: sa.ok,
     detail: sa.ok ? runtimeSa : sa.err,
     fix: command([
-      "gcloud iam service-accounts create sugu-agri-runtime",
-      '--display-name="SuguAgriField MCP runtime"',
+      "gcloud iam service-accounts create agriops-runtime",
+      '--display-name="AgriOps MCP runtime"',
       `--project=${project}`,
     ]),
   });
@@ -238,7 +238,7 @@ function main(): void {
     "run",
     "services",
     "describe",
-    "sugu-agri-field",
+    "agriops-mcp",
     `--region=${options.region}`,
     `--project=${project}`,
     "--format=value(status.url)",
@@ -256,7 +256,7 @@ function main(): void {
     ]),
   });
 
-  console.log(`SuguAgriField deploy preflight: project=${project}, region=${options.region}`);
+  console.log(`AgriOps MCP deploy preflight: project=${project}, region=${options.region}`);
   let failed = 0;
   for (const result of results) {
     const marker = result.ok ? "PASS" : "FAIL";
