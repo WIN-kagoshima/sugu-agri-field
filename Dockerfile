@@ -19,7 +19,7 @@
 ############################
 # 1. deps stage — install full toolchain for build/test assets
 ############################
-FROM node:20-bookworm-slim AS deps
+FROM node:25-bookworm-slim AS deps
 WORKDIR /app
 
 # Tools needed to compile better-sqlite3 native bindings.
@@ -34,7 +34,7 @@ RUN npm ci --no-audit --no-fund --ignore-scripts \
 ############################
 # 2. production dependencies — runtime-only node_modules
 ############################
-FROM node:20-bookworm-slim AS prod-deps
+FROM node:25-bookworm-slim AS prod-deps
 WORKDIR /app
 
 # Compile better-sqlite3 for Linux, then keep only production dependencies.
@@ -50,7 +50,7 @@ RUN npm ci --omit=dev --no-audit --no-fund --ignore-scripts \
 ############################
 # 3. build stage — server + MCP Apps UI bundle
 ############################
-FROM node:20-bookworm-slim AS build
+FROM node:25-bookworm-slim AS build
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
