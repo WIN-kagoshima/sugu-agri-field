@@ -17,7 +17,7 @@
 #   docker run --rm -p 8080:8080 -e PORT=8080 -e MCP_BASE_URL=http://localhost:8080 sugu-agri-field:local
 
 ############################
-# 1. deps stage — install
+# 1. deps stage — install full toolchain for build/test assets
 ############################
 FROM node:20-bookworm-slim AS deps
 WORKDIR /app
@@ -32,21 +32,37 @@ RUN npm ci --no-audit --no-fund --ignore-scripts \
     && npm rebuild better-sqlite3
 
 ############################
-# 2. build stage — tsc
+# 2. production dependencies — runtime-only node_modules
+############################
+FROM node:20-bookworm-slim AS prod-deps
+WORKDIR /app
+
+# Compile better-sqlite3 for Linux, then keep only production dependencies.
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends python3 make g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY package.json package-lock.json* ./
+RUN npm ci --omit=dev --no-audit --no-fund --ignore-scripts \
+    && npm rebuild better-sqlite3 \
+    && npm cache clean --force
+
+############################
+# 3. build stage — server + MCP Apps UI bundle
 ############################
 FROM node:20-bookworm-slim AS build
 WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
-COPY package.json tsconfig.json tsconfig.build.json ./
+COPY package.json tsconfig.json tsconfig.build.json vite.config.ts ./
 COPY server.ts ./
 COPY src ./src
 COPY scripts ./scripts
 
-RUN node_modules/.bin/tsc -p tsconfig.build.json
+RUN npm run build:all
 
 ############################
-# 3. snapshot stage — optional
+# 4. snapshot stage — optional
 ############################
 # Snapshots are intentionally NOT baked into the OSS image because
 # eMAFF/FAMIC data must be downloaded by the operator. To bake your own
@@ -55,7 +71,7 @@ RUN node_modules/.bin/tsc -p tsconfig.build.json
 ARG BAKE_SNAPSHOTS=0
 
 ############################
-# 4. final stage — distroless
+# 5. final stage — distroless
 ############################
 FROM gcr.io/distroless/nodejs20-debian12:nonroot AS runtime
 WORKDIR /app
@@ -64,7 +80,7 @@ ENV NODE_ENV=production \
     LOG_LEVEL=info
 
 COPY --from=build  --chown=nonroot:nonroot /app/dist          ./dist
-COPY --from=build  --chown=nonroot:nonroot /app/node_modules  ./node_modules
+COPY --from=prod-deps  --chown=nonroot:nonroot /app/node_modules  ./node_modules
 COPY --from=build  --chown=nonroot:nonroot /app/package.json  ./package.json
 
 # Snapshots dir always exists; specific files only present if BAKE_SNAPSHOTS=1.

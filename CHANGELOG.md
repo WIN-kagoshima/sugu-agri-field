@@ -8,6 +8,16 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ## [Unreleased]
 
+## [0.5.1] — Patch — release hardening + Cloud Run image fix
+
+### Security
+- Refreshed vulnerable development dependencies (`@modelcontextprotocol/inspector`, Vite, Vitest, `@vitejs/plugin-react`) so `npm audit --audit-level=high` reports `found 0 vulnerabilities`.
+
+### Fixed
+- Docker image now runs `npm run build:all` during the build stage, so Cloud Run images include `dist/ui/dashboard.html` instead of falling back to the MCP Apps UI placeholder.
+- Docker runtime stage now copies `node_modules` from a production-only dependency stage (`npm ci --omit=dev`) instead of shipping dev/test tooling in the distroless runtime image.
+- Replaced stale `pnpm build:ui` references in the dashboard UI placeholder and comments with `npm run build:ui`.
+
 ### Added — MCP Spec 2025-11-25 §6.10 ToolAnnotations
 - Every registered tool now exposes the official `ToolAnnotations` block (`readOnlyHint`, `idempotentHint`, `openWorldHint`, `destructiveHint`) on `tools/list`, so MCP hosts can correctly decide whether to require user confirmation before invocation.
 - `src/server/surface-catalog.ts` is the single source of truth: each tool entry carries an `annotations` field plus three reusable presets (`READ_ONLY`, `READ_ONLY_REMOTE`, `DRAFT_NON_IDEMPOTENT`).
@@ -105,7 +115,8 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - eMAFF and FAMIC SQLite snapshot build pipeline under `scripts/build-snapshots/`.
 - Cloud Run-ready Dockerfile and GitHub Actions deploy workflow.
 
-[Unreleased]: https://github.com/WIN-kagoshima/sugu-agri-field/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/WIN-kagoshima/sugu-agri-field/compare/v0.5.1...HEAD
+[0.5.1]: https://github.com/WIN-kagoshima/sugu-agri-field/compare/v0.5.0...v0.5.1
 [0.5.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.5.0
 [0.4.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.4.0
 [0.3.0]: https://github.com/WIN-kagoshima/sugu-agri-field/releases/tag/v0.3.0

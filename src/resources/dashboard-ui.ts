@@ -9,7 +9,7 @@ import { DASHBOARD_URI } from "../tools/open-dashboard.js";
 /**
  * Register the MCP Apps UI resource at `ui://sugu-agri/dashboard.html`.
  *
- * The HTML is produced by `pnpm build:ui` (Vite + vite-plugin-singlefile)
+ * The HTML is produced by `npm run build:ui` (Vite + vite-plugin-singlefile)
  * into `dist/ui/dashboard.html`. If the bundle is missing (e.g. the user is
  * running stdio in dev without having built the UI yet) we serve a tiny
  * placeholder page so the resource still exists, and the LLM can explain
@@ -84,7 +84,7 @@ function placeholderHtml(): string {
 <body>
   <h1>SuguAgriField dashboard</h1>
   <p>The interactive UI has not been built yet. Run:</p>
-  <pre><code>pnpm build:ui</code></pre>
+  <pre><code>npm run build:ui</code></pre>
   <p class="note">This placeholder is served when <code>dist/ui/dashboard.html</code> does not exist on the server filesystem.</p>
 </body>
 </html>`;
