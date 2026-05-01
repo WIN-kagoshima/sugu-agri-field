@@ -51,7 +51,7 @@
     "test:ui": "playwright test",
     "snapshots:build": "tsx scripts/build-snapshots/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector node dist/server.js --stdio",
-    "deploy": "gcloud run deploy sugu-agri-field --source . --region asia-northeast1 --min-instances 0 --max-instances 10 --memory 512Mi --cpu 1 --concurrency 80 --timeout 60s --allow-unauthenticated",
+    "deploy": "node -e \"console.error('Use docs/runbook.md §2.3 and pass _MCP_BASE_URL explicitly; refusing unsafe one-command deploy.'); process.exit(1)\"",
     "prepack": "npm run build:all",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test"
   },

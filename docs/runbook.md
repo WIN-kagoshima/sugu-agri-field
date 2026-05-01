@@ -55,15 +55,35 @@ gcloud secrets add-iam-policy-binding sugu-token-enc-key \
   --project=${PROJECT}
 ```
 
-Repeat for `sugu-session-cookie-secret` (32 bytes hex).
+Repeat for `sugu-session-cookie-secret` (32 bytes hex):
+
+```bash
+node -e "console.log(require('node:crypto').randomBytes(32).toString('hex'))" \
+  | gcloud secrets create sugu-session-cookie-secret --data-file=- --project=${PROJECT}
+
+gcloud secrets add-iam-policy-binding sugu-session-cookie-secret \
+  --member=serviceAccount:${SA} \
+  --role=roles/secretmanager.secretAccessor \
+  --project=${PROJECT}
+```
 
 ### 2.3 Build & deploy
 
 ```bash
-gcloud builds submit --config cloudbuild.yaml --project=${PROJECT}
+gcloud artifacts repositories create sugu-mcp \
+  --repository-format=docker \
+  --location=asia-northeast1 \
+  --description="SuguAgriField MCP images" \
+  --project=${PROJECT}
+
+gcloud builds submit \
+  --config cloudbuild.yaml \
+  --project=${PROJECT} \
+  --region=asia-northeast1 \
+  --substitutions=_MCP_BASE_URL=https://mcp.sugu-agri.example.com
 
 gcloud run deploy sugu-agri-field \
-  --image=asia-northeast1-docker.pkg.dev/${PROJECT}/mcp/sugu-agri-field:latest \
+  --image=asia-northeast1-docker.pkg.dev/${PROJECT}/sugu-mcp/sugu-agri-field:latest \
   --region=asia-northeast1 \
   --service-account=${SA} \
   --min-instances=0 \

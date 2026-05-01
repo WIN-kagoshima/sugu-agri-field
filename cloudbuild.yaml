@@ -31,14 +31,17 @@ steps:
       - --cpu=1
       - --concurrency=80
       - --timeout=60s
-      - --set-env-vars=LOG_LEVEL=info,MCP_BASE_URL=$_MCP_BASE_URL
+      - --set-env-vars=LOG_LEVEL=info,MCP_BASE_URL=$_MCP_BASE_URL,SUGU_TRUST_PROXY=1,SUGU_RATE_RPS=15,SUGU_RATE_BURST=45
+      - --set-secrets=SUGU_TOKEN_ENC_KEY=$_TOKEN_ENC_SECRET:latest,SESSION_COOKIE_SECRET=$_SESSION_COOKIE_SECRET:latest
 options:
   logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
 substitutions:
   _REGION: asia-northeast1
   _REPO: sugu-mcp
-  _SERVICE_ACCOUNT: sugu-agri-field-runtime@$PROJECT_ID.iam.gserviceaccount.com
-  _MCP_BASE_URL: https://mcp.sugukuru.dev
+  _SERVICE_ACCOUNT: sugu-agri-runtime@${PROJECT_ID}.iam.gserviceaccount.com
+  _TOKEN_ENC_SECRET: sugu-token-enc-key
+  _SESSION_COOKIE_SECRET: sugu-session-cookie-secret
 images:
   - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$SHORT_SHA
   - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest

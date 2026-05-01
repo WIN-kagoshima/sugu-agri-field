@@ -47,7 +47,8 @@ jobs:
         run: |
           gcloud builds submit \
             --config=cloudbuild.yaml \
-            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=${{ secrets.MCP_BASE_URL }},_SERVICE_ACCOUNT=${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }} \
+            --project=$PROJECT_ID \
+            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=${{ secrets.MCP_BASE_URL }},_SERVICE_ACCOUNT=${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }},_TOKEN_ENC_SECRET=sugu-token-enc-key,_SESSION_COOKIE_SECRET=sugu-session-cookie-secret \
             --region=$REGION
 
       - name: Print Cloud Run URL

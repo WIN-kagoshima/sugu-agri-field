@@ -8,6 +8,13 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ## [Unreleased]
 
+### Fixed — Cloud Build / Cloud Run deploy path
+- `cloudbuild.yaml` now matches the runbook's `sugu-agri-runtime` service-account name and `sugu-mcp` Artifact Registry repository.
+- Cloud Build deploys now pass production HTTP env vars (`SUGU_TRUST_PROXY`, rate-limit settings) and Secret Manager mappings (`SUGU_TOKEN_ENC_KEY`, `SESSION_COOKIE_SECRET`) instead of silently falling back to dev defaults.
+- `deploy.yml` now passes `--project=$PROJECT_ID` explicitly to `gcloud builds submit` and forwards the required Secret Manager substitution names.
+- `npm run deploy` now refuses unsafe one-command source deploys and directs operators to the runbook, avoiding accidental Cloud Run deployments without secrets or the hardened image path.
+- `docs/runbook.md` now includes exact `sugu-session-cookie-secret` creation commands and uses the same `sugu-mcp` Artifact Registry repository as `cloudbuild.yaml`.
+
 ## [0.5.1] — Patch — release hardening + Cloud Run image fix
 
 ### Security
