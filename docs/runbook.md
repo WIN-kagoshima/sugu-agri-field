@@ -26,6 +26,16 @@ serverless, swap it for a Memorystore / Cloud SQL backend.
 
 ## 2. First-time deploy (golden path)
 
+Before creating resources, run the automated preflight check. It verifies the
+active gcloud account, billing, required APIs, Artifact Registry, runtime service
+account, Secret Manager entries, and whether the Cloud Run service already
+exists. Failed checks print copy-pasteable fix commands.
+
+```bash
+PROJECT=sugu-agri-prod
+npm run deploy:preflight -- --project=${PROJECT}
+```
+
 ### 2.1 Create the runtime service account
 
 ```bash
