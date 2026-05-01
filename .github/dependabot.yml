@@ -9,7 +9,7 @@ updates:
       timezone: "Asia/Tokyo"
     open-pull-requests-limit: 5
     reviewers:
-      - "WIN-kagoshima/maintainers"
+      - "WIN-kagoshima"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -36,6 +36,14 @@ updates:
       # Pin to the latest stable v1.x line; v2 is pre-alpha as of 2026-04.
       - dependency-name: "@modelcontextprotocol/sdk"
         update-types: ["version-update:semver-major"]
+      # This server is intentionally Node.js 20+ and its Docker runtime is
+      # distroless nodejs20. Keep Node typings aligned with the runtime.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
+      # Express 5 changes router/middleware behavior. Take that as a deliberate
+      # migration rather than an automated dependency PR.
+      - dependency-name: "express"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -58,3 +66,8 @@ updates:
     commit-message:
       prefix: "docker"
       include: "scope"
+    ignore:
+      # Build stages and the final distroless image are intentionally on the
+      # Node.js 20 LTS line. Avoid Dependabot PRs to node:25+ images.
+      - dependency-name: "node"
+        update-types: ["version-update:semver-major"]
