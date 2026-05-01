@@ -86,13 +86,15 @@ export async function startHttp(
   app.use(requestIdMiddleware);
 
   // ----- Health & metadata -----
-  app.get("/healthz", (_req, res) => {
+  const healthHandler: express.RequestHandler = (_req, res) => {
     if (!lifecycle.isHealthy()) {
       res.status(503).json({ status: "draining", state: lifecycle.getState() });
       return;
     }
     res.json({ status: "ok", version, name: "sugu-agri-field" });
-  });
+  };
+  app.get("/healthz", healthHandler);
+  app.get("/livez", healthHandler);
 
   app.get("/readyz", async (_req, res) => {
     if (!lifecycle.isHealthy()) {

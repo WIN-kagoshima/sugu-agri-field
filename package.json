@@ -52,6 +52,7 @@
     "snapshots:build": "tsx scripts/build-snapshots/index.ts",
     "inspector": "npx @modelcontextprotocol/inspector node dist/server.js --stdio",
     "deploy:preflight": "tsx scripts/deploy-preflight.ts",
+    "deploy:smoke": "tsx scripts/deploy-smoke.ts",
     "deploy": "node -e \"console.error('Use docs/runbook.md §2.3 and pass _MCP_BASE_URL explicitly; refusing unsafe one-command deploy.'); process.exit(1)\"",
     "prepack": "npm run build:all",
     "prepublishOnly": "npm run lint && npm run typecheck && npm test"

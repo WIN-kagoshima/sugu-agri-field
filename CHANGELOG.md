@@ -10,6 +10,8 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ### Fixed — Cloud Build / Cloud Run deploy path
 - Added `npm run deploy:preflight`, a GCP preflight checker for billing, required APIs, Artifact Registry, runtime service account, Secret Manager entries, and existing Cloud Run service URL. The runbook now starts with this diagnostic so operators get concrete fix commands before deployment.
+- Added `npm run deploy:smoke`, a deployed-service smoke tester for `/healthz`, `/readyz`, Server Card, `/mcp` initialize, and optional `/metrics` bearer auth checks.
+- Added `/livez` as a liveness alias for Cloud Run environments where organization or edge infrastructure intercepts `/healthz`; `deploy:smoke` now supports `--auth-bearer` and `--health-path`.
 - `cloudbuild.yaml` now matches the runbook's `sugu-agri-runtime` service-account name and `sugu-mcp` Artifact Registry repository.
 - Cloud Build deploys now pass production HTTP env vars (`SUGU_TRUST_PROXY`, rate-limit settings) and Secret Manager mappings (`SUGU_TOKEN_ENC_KEY`, `SESSION_COOKIE_SECRET`) instead of silently falling back to dev defaults.
 - `deploy.yml` now passes `--project=$PROJECT_ID` explicitly to `gcloud builds submit` and forwards the required Secret Manager substitution names.

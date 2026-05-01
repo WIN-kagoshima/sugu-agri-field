@@ -211,18 +211,16 @@ function main(): void {
     ]),
   });
 
+  const secrets = tryGcloud(["secrets", "list", `--project=${project}`, "--format=value(name)"]);
+  const secretNames = new Set(
+    secrets.ok ? secrets.out.split(/\r?\n/).map((name) => name.split("/").pop() ?? name) : [],
+  );
   for (const secret of [options.tokenSecret, options.sessionSecret]) {
-    const found = tryGcloud([
-      "secrets",
-      "describe",
-      secret,
-      `--project=${project}`,
-      "--format=value(name)",
-    ]);
+    const found = secrets.ok && secretNames.has(secret);
     pushResult(results, {
       name: `Secret Manager secret: ${secret}`,
-      ok: found.ok,
-      detail: found.ok ? secret : found.err,
+      ok: found,
+      detail: found ? secret : secrets.ok ? `missing: ${secret}` : secrets.err,
       fix:
         secret === options.tokenSecret
           ? command([

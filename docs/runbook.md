@@ -113,6 +113,7 @@ gcloud run deploy sugu-agri-field \
 ```bash
 BASE=https://mcp.sugu-agri.example.com
 curl -sS ${BASE}/healthz | jq .
+curl -sS ${BASE}/livez | jq .   # Equivalent liveness alias for Cloud Run smoke tests.
 curl -sS ${BASE}/readyz  | jq .
 curl -sS ${BASE}/.well-known/mcp-server.json | jq '.tools'
 
@@ -126,6 +127,29 @@ curl -sS ${BASE}/mcp \
 
 All four MUST succeed. If `/readyz` is `not_ready`, snapshots are
 missing — see §6.2.
+
+You can run the same checks with the bundled smoke-test script:
+
+```bash
+npm run deploy:smoke -- --base-url=${BASE} --allow-not-ready
+```
+
+Use `--allow-not-ready` only before eMAFF/FAMIC snapshots are present. Remove it
+for production readiness gates.
+
+If Cloud Run is protected by IAM, pass an identity token:
+
+```bash
+TOKEN=$(gcloud auth print-identity-token)
+npm run deploy:smoke -- --base-url=${BASE} --allow-not-ready --auth-bearer=${TOKEN}
+```
+
+If your Google Cloud organization intercepts `/healthz`, use the equivalent
+`/livez` liveness alias:
+
+```bash
+npm run deploy:smoke -- --base-url=${BASE} --health-path=/livez --allow-not-ready --auth-bearer=${TOKEN}
+```
 
 ---
 

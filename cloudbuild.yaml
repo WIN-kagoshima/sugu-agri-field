@@ -3,7 +3,7 @@ steps:
     name: gcr.io/cloud-builders/docker
     args:
       - build
-      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$SHORT_SHA
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
       - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
       - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
       - .
@@ -20,7 +20,7 @@ steps:
       - run
       - deploy
       - sugu-agri-field
-      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$SHORT_SHA
+      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
       - --region=$_REGION
       - --platform=managed
       - --allow-unauthenticated
@@ -43,5 +43,5 @@ substitutions:
   _TOKEN_ENC_SECRET: sugu-token-enc-key
   _SESSION_COOKIE_SECRET: sugu-session-cookie-secret
 images:
-  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$SHORT_SHA
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:$BUILD_ID
   - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/sugu-agri-field:latest
