@@ -63,9 +63,24 @@ jobs:
         with:
           workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
           service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+          # Explicit project_id ensures the credentials file carries
+          # quota_project_id, which Service Usage uses to authorize
+          # cloudbuild.googleapis.com requests. Without it, gcloud falls back
+          # to "no quota project" and Service Usage fails with
+          # "user is forbidden from accessing the bucket [***_cloudbuild]".
+          project_id: ${{ env.PROJECT_ID }}
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
+
+      - name: Pin gcloud project + quota project
+        run: |
+          gcloud config set core/project "$PROJECT_ID"
+          gcloud config set billing/quota_project "$PROJECT_ID"
+          echo "--- gcloud config ---"
+          gcloud config list
+          echo "--- effective active account ---"
+          gcloud auth list --filter=status:ACTIVE --format='value(account)'
 
       - name: Install smoke-test dependencies
         run: npm ci --ignore-scripts
@@ -82,6 +97,14 @@ jobs:
       - name: Configure docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
 
+      - name: Verify Cloud Build staging bucket access
+        run: |
+          echo "Checking access to gs://${PROJECT_ID}_cloudbuild ..."
+          gcloud storage objects list "gs://${PROJECT_ID}_cloudbuild" \
+            --limit=1 --format='value(name)' || echo "(empty bucket OK)"
+          echo "Active account: $(gcloud auth list --filter=status:ACTIVE --format='value(account)')"
+          echo "Quota project: $(gcloud config get-value billing/quota_project 2>/dev/null || echo unset)"
+
       - name: Submit Cloud Build
         # NOTE: We deliberately do NOT pass --region= to `gcloud builds submit`.
         # Regional Cloud Build uses a per-region staging bucket
@@ -91,6 +114,8 @@ jobs:
         # deployer SA already has roles/storage.objectAdmin. The Cloud Run
         # deployment region is still asia-northeast1 because cloudbuild.yaml
         # passes --region=$_REGION to `gcloud run deploy`.
+        env:
+          CLOUDSDK_BILLING_QUOTA_PROJECT: ${{ env.PROJECT_ID }}
         run: |
           gcloud builds submit \
             --config=cloudbuild.yaml \
