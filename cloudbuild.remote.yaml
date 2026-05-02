@@ -1,0 +1,78 @@
+steps:
+  - id: clone
+    name: gcr.io/cloud-builders/git
+    args:
+      - clone
+      - --no-tags
+      - --depth=1
+      - $_GIT_URL
+      - repo
+  - id: checkout
+    name: gcr.io/cloud-builders/git
+    dir: repo
+    args:
+      - checkout
+      - $_GIT_SHA
+  - id: restore-snapshots
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    dir: repo
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [ -z "$_SNAPSHOT_BUCKET" ]; then
+          echo "No _SNAPSHOT_BUCKET set; using snapshots already present in the repository clone."
+          exit 0
+        fi
+        mkdir -p snapshots
+        gcloud storage cp "gs://$_SNAPSHOT_BUCKET/emaff-fude-kagoshima.sqlite" snapshots/emaff-fude-kagoshima.sqlite
+        gcloud storage cp "gs://$_SNAPSHOT_BUCKET/famic-pesticide-2026.sqlite" snapshots/famic-pesticide-2026.sqlite
+  - id: build
+    name: gcr.io/cloud-builders/docker
+    dir: repo
+    args:
+      - build
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
+      - --tag=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest
+      - --cache-from=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest
+      - .
+  - id: push
+    name: gcr.io/cloud-builders/docker
+    args:
+      - push
+      - --all-tags
+      - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp
+  - id: deploy
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: gcloud
+    args:
+      - run
+      - deploy
+      - agriops-mcp
+      - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
+      - --region=$_REGION
+      - --platform=managed
+      - --service-account=$_SERVICE_ACCOUNT
+      - --min-instances=0
+      - --max-instances=10
+      - --memory=512Mi
+      - --cpu=1
+      - --concurrency=80
+      - --timeout=60s
+      - --set-env-vars=LOG_LEVEL=info,MCP_BASE_URL=$_MCP_BASE_URL,AGRIOPS_TRUST_PROXY=1,AGRIOPS_RATE_RPS=15,AGRIOPS_RATE_BURST=45
+      - --set-secrets=AGRIOPS_TOKEN_ENC_KEY=$_TOKEN_ENC_SECRET:latest,SESSION_COOKIE_SECRET=$_SESSION_COOKIE_SECRET:latest
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamic_substitutions: true
+substitutions:
+  _REGION: asia-northeast1
+  _REPO: agriops-mcp
+  _SERVICE_ACCOUNT: agriops-runtime@${PROJECT_ID}.iam.gserviceaccount.com
+  _TOKEN_ENC_SECRET: agriops-token-enc-key
+  _SESSION_COOKIE_SECRET: agriops-session-cookie-secret
+  _SNAPSHOT_BUCKET: ""
+  _GIT_URL: https://github.com/WIN-kagoshima/agriops-mcp.git
+  _GIT_SHA: main
+images:
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
+  - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest

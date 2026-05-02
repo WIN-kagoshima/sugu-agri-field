@@ -12,6 +12,7 @@ coverage
 .env.*
 *.sqlite
 *.sqlite-*
+!snapshots/*.sqlite
 snapshots/raw
 .tokens
 README*.md

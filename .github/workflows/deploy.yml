@@ -97,31 +97,25 @@ jobs:
       - name: Configure docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
 
-      - name: Verify Cloud Build staging bucket access
+      - name: Print Cloud Build auth context
         run: |
-          echo "Checking access to gs://${PROJECT_ID}_cloudbuild ..."
-          gcloud storage objects list "gs://${PROJECT_ID}_cloudbuild" \
-            --limit=1 --format='value(name)' || echo "(empty bucket OK)"
           echo "Active account: $(gcloud auth list --filter=status:ACTIVE --format='value(account)')"
           echo "Quota project: $(gcloud config get-value billing/quota_project 2>/dev/null || echo unset)"
 
       - name: Submit Cloud Build
-        # NOTE: We deliberately do NOT pass --region= to `gcloud builds submit`.
-        # Regional Cloud Build uses a per-region staging bucket
-        # (gs://${PROJECT}_${REGION}_cloudbuild) that the deployer SA does not
-        # own and that org policy blocks `serviceusage.services.use` on.
-        # Global Cloud Build uses gs://${PROJECT}_cloudbuild, on which the
-        # deployer SA already has roles/storage.objectAdmin. The Cloud Run
-        # deployment region is still asia-northeast1 because cloudbuild.yaml
-        # passes --region=$_REGION to `gcloud run deploy`.
+        # Use --no-source so `gcloud builds submit` does not upload a source
+        # tarball to the managed *_cloudbuild staging bucket. Some org policies
+        # block that bucket path even when the deployer can start Cloud Build.
+        # cloudbuild.remote.yaml clones this repository inside Cloud Build,
+        # restores snapshots from GCS, then builds/deploys the image.
         env:
           CLOUDSDK_BILLING_QUOTA_PROJECT: ${{ env.PROJECT_ID }}
         run: |
           gcloud builds submit \
-            --config=cloudbuild.yaml \
+            --no-source \
+            --config=cloudbuild.remote.yaml \
             --project=$PROJECT_ID \
-            --gcs-source-staging-dir="gs://${PROJECT_ID}_cloudbuild/source" \
-            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=$MCP_BASE_URL,_SERVICE_ACCOUNT=$GCP_RUNTIME_SERVICE_ACCOUNT,_TOKEN_ENC_SECRET=agriops-token-enc-key,_SESSION_COOKIE_SECRET=agriops-session-cookie-secret,_SNAPSHOT_BUCKET=$SNAPSHOT_BUCKET
+            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=$MCP_BASE_URL,_SERVICE_ACCOUNT=$GCP_RUNTIME_SERVICE_ACCOUNT,_TOKEN_ENC_SECRET=agriops-token-enc-key,_SESSION_COOKIE_SECRET=agriops-session-cookie-secret,_SNAPSHOT_BUCKET=$SNAPSHOT_BUCKET,_GIT_SHA=$GITHUB_SHA
 
       - name: Print Cloud Run URL
         run: |
