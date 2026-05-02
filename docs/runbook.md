@@ -184,6 +184,21 @@ files being present in the checkout.
 > but a literal `\n` in `GCP_PROJECT_ID` will still propagate to log lines such
 > as `[***\n] is not a valid project ID.` until you re-save the secret.
 
+#### Required IAM on `SNAPSHOT_BUCKET`
+
+The deployer service account needs only object-level access to read the snapshots
+during Cloud Build. The minimum binding is:
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://${SNAPSHOT_BUCKET} \
+  --member="serviceAccount:agriops-github-deployer@${PROJECT}.iam.gserviceaccount.com" \
+  --role=roles/storage.objectViewer
+```
+
+`deploy:preflight` will warn (but not fail) if `storage.buckets.get` is missing
+on the bucket. To silence that warning, optionally grant `roles/storage.legacyBucketReader`
+on the bucket as well — it is *not* required for deploys to succeed.
+
 ---
 
 ## 3. Day-2 operations

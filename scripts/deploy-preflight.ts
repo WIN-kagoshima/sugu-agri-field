@@ -16,6 +16,7 @@ interface CheckResult {
   ok: boolean;
   detail: string;
   fix?: string;
+  warn?: boolean;
 }
 
 const REQUIRED_APIS = [
@@ -254,27 +255,7 @@ function main(): void {
   }
 
   if (options.snapshotBucket) {
-    const bucket = tryGcloud([
-      "storage",
-      "buckets",
-      "describe",
-      `gs://${options.snapshotBucket}`,
-      `--project=${project}`,
-      "--format=value(name)",
-    ]);
-    pushResult(results, {
-      name: `GCS snapshot bucket: ${options.snapshotBucket}`,
-      ok: bucket.ok,
-      detail: bucket.ok ? options.snapshotBucket : bucket.err,
-      fix: command([
-        "gcloud storage buckets create",
-        `gs://${options.snapshotBucket}`,
-        `--project=${project}`,
-        `--location=${options.region}`,
-        "--uniform-bucket-level-access",
-      ]),
-    });
-
+    const objectResults: CheckResult[] = [];
     for (const object of ["emaff-fude-kagoshima.sqlite", "famic-pesticide-2026.sqlite"]) {
       const objectCheck = tryGcloud([
         "storage",
@@ -283,12 +264,59 @@ function main(): void {
         `gs://${options.snapshotBucket}/${object}`,
         "--format=value(name,size)",
       ]);
-      pushResult(results, {
+      objectResults.push({
         name: `GCS snapshot object: ${object}`,
         ok: objectCheck.ok && objectCheck.out.length > 0,
         detail: objectCheck.ok ? objectCheck.out : objectCheck.err,
         fix: `Run: gcloud storage cp snapshots/${object} gs://${options.snapshotBucket}/${object}`,
       });
+    }
+    const allObjectsAccessible = objectResults.every((result) => result.ok);
+
+    const bucket = tryGcloud([
+      "storage",
+      "buckets",
+      "describe",
+      `gs://${options.snapshotBucket}`,
+      `--project=${project}`,
+      "--format=value(name)",
+    ]);
+    if (bucket.ok) {
+      pushResult(results, {
+        name: `GCS snapshot bucket: ${options.snapshotBucket}`,
+        ok: true,
+        detail: options.snapshotBucket,
+      });
+    } else if (allObjectsAccessible) {
+      pushResult(results, {
+        name: `GCS snapshot bucket: ${options.snapshotBucket}`,
+        ok: true,
+        warn: true,
+        detail: `bucket-level metadata not accessible (storage.buckets.get denied), but all required objects are reachable. Cloud Build only needs object reads, so this is non-fatal. To silence this warning, grant roles/storage.legacyBucketReader on gs://${options.snapshotBucket} to the deployer SA.`,
+        fix: command([
+          "gcloud storage buckets add-iam-policy-binding",
+          `gs://${options.snapshotBucket}`,
+          '--member="serviceAccount:<deployer-sa-email>"',
+          "--role=roles/storage.legacyBucketReader",
+        ]),
+      });
+    } else {
+      pushResult(results, {
+        name: `GCS snapshot bucket: ${options.snapshotBucket}`,
+        ok: false,
+        detail: bucket.err,
+        fix: command([
+          "gcloud storage buckets create",
+          `gs://${options.snapshotBucket}`,
+          `--project=${project}`,
+          `--location=${options.region}`,
+          "--uniform-bucket-level-access",
+        ]),
+      });
+    }
+
+    for (const result of objectResults) {
+      pushResult(results, result);
     }
   }
 
@@ -316,20 +344,28 @@ function main(): void {
 
   console.log(`AgriOps MCP deploy preflight: project=${project}, region=${options.region}`);
   let failed = 0;
+  let warnings = 0;
   for (const result of results) {
-    const marker = result.ok ? "PASS" : "FAIL";
+    const marker = result.ok ? (result.warn ? "WARN" : "PASS") : "FAIL";
     console.log(`\n[${marker}] ${result.name}`);
     console.log(result.detail);
     if (!result.ok) {
       failed++;
       if (result.fix) console.log(`Fix:\n${result.fix}`);
+    } else if (result.warn) {
+      warnings++;
+      if (result.fix) console.log(`Suggested fix:\n${result.fix}`);
     }
   }
   if (failed > 0) {
     console.error(`\n${failed} preflight check(s) failed.`);
     process.exit(1);
   }
-  console.log("\nAll deploy preflight checks passed.");
+  if (warnings > 0) {
+    console.log(`\nAll deploy preflight checks passed (${warnings} warning(s) — see above).`);
+  } else {
+    console.log("\nAll deploy preflight checks passed.");
+  }
 }
 
 main();
