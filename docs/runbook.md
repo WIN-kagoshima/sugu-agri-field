@@ -186,6 +186,29 @@ Run service. Cloud Build restores SQLite snapshots from `SNAPSHOT_BUCKET` before
 building the container, so GitHub Actions deploys do not depend on ignored local
 files being present in the checkout.
 
+The deployer also needs `roles/iam.serviceAccountUser` on both service accounts
+that it asks Google Cloud to use:
+
+```bash
+PROJECT=mcp-win
+DEPLOYER=agriops-github-deployer@${PROJECT}.iam.gserviceaccount.com
+PROJECT_NUMBER=$(gcloud projects describe ${PROJECT} --format='value(projectNumber)')
+
+# Cloud Run runtime service account used by `gcloud run deploy --service-account`.
+gcloud iam service-accounts add-iam-policy-binding \
+  agriops-runtime@${PROJECT}.iam.gserviceaccount.com \
+  --project=${PROJECT} \
+  --member="serviceAccount:${DEPLOYER}" \
+  --role=roles/iam.serviceAccountUser
+
+# Cloud Build worker service account used to execute the build.
+gcloud iam service-accounts add-iam-policy-binding \
+  ${PROJECT_NUMBER}-compute@developer.gserviceaccount.com \
+  --project=${PROJECT} \
+  --member="serviceAccount:${DEPLOYER}" \
+  --role=roles/iam.serviceAccountUser
+```
+
 > When pasting these secrets into the GitHub UI, make sure there is **no
 > trailing newline**. The deploy workflow trims whitespace and CR/LF defensively,
 > but a literal `\n` in `GCP_PROJECT_ID` will still propagate to log lines such
