@@ -8,6 +8,7 @@ interface Options {
   tokenSecret: string;
   sessionSecret: string;
   snapshotBucket?: string;
+  skipBilling: boolean;
 }
 
 interface CheckResult {
@@ -32,12 +33,17 @@ function parseArgs(argv: string[]): Options {
     repository: "agriops-mcp",
     tokenSecret: "agriops-token-enc-key",
     sessionSecret: "agriops-session-cookie-secret",
+    skipBilling: false,
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
     if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
+    }
+    if (arg === "--skip-billing") {
+      options.skipBilling = true;
+      continue;
     }
     const next = argv[i + 1];
     if (!next || next.startsWith("--")) {
@@ -93,6 +99,7 @@ Options:
   --token-secret <name>             Secret Manager token key. Default: agriops-token-enc-key.
   --session-secret <name>           Secret Manager cookie key. Default: agriops-session-cookie-secret.
   --snapshot-bucket <name>          Optional GCS bucket containing baked SQLite snapshots.
+  --skip-billing                    Skip billingEnabled check for least-privilege CI deployers.
 `);
 }
 
@@ -141,19 +148,21 @@ function main(): void {
     fix: "Run: gcloud auth login",
   });
 
-  const billing = tryGcloud([
-    "billing",
-    "projects",
-    "describe",
-    project,
-    "--format=value(billingEnabled)",
-  ]);
-  pushResult(results, {
-    name: "billing enabled",
-    ok: billing.ok && billing.out === "True",
-    detail: billing.ok ? `${project}: ${billing.out || "(empty)"}` : billing.err,
-    fix: `Open: https://console.cloud.google.com/billing/projects?project=${project}`,
-  });
+  if (!options.skipBilling) {
+    const billing = tryGcloud([
+      "billing",
+      "projects",
+      "describe",
+      project,
+      "--format=value(billingEnabled)",
+    ]);
+    pushResult(results, {
+      name: "billing enabled",
+      ok: billing.ok && billing.out === "True",
+      detail: billing.ok ? `${project}: ${billing.out || "(empty)"}` : billing.err,
+      fix: `Open: https://console.cloud.google.com/billing/projects?project=${project}`,
+    });
+  }
 
   const services = tryGcloud([
     "services",

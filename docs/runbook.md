@@ -38,6 +38,9 @@ SNAPSHOT_BUCKET=mcp-win-agriops-snapshots
 npm run deploy:preflight -- --project=${PROJECT} --snapshot-bucket=${SNAPSHOT_BUCKET}
 ```
 
+Least-privilege CI deployers can add `--skip-billing` because billing state is
+an operator-owned project setup check, not a per-deploy permission.
+
 ### 2.1 Create the runtime service account
 
 ```bash

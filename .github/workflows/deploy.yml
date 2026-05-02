@@ -65,7 +65,8 @@ jobs:
             --project="$PROJECT_ID" \
             --region="$REGION" \
             --runtime-service-account="$GCP_RUNTIME_SERVICE_ACCOUNT" \
-            --snapshot-bucket="$SNAPSHOT_BUCKET"
+            --snapshot-bucket="$SNAPSHOT_BUCKET" \
+            --skip-billing
 
       - name: Configure docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
