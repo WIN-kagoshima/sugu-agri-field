@@ -37,3 +37,22 @@ The server runs the `simpleStatelessStreamableHttp` pattern: every
 request is independent. There is no `Mcp-Session-Id`. The transport
 requires `Accept: application/json, text/event-stream` even when the
 response is a plain JSON-RPC reply.
+
+## Targeting the Cloud Run reference deployment
+
+The hosted endpoint is IAM-protected. Set `AGRIOPS_AUTH_BEARER` before running
+the script:
+
+```bash
+export AGRIOPS_BASE_URL=https://agriops-mcp-n5vdix22hq-an.a.run.app
+export AGRIOPS_AUTH_BEARER="$(gcloud auth print-identity-token)"
+./run.sh
+```
+
+PowerShell:
+
+```powershell
+$env:AGRIOPS_BASE_URL = "https://agriops-mcp-n5vdix22hq-an.a.run.app"
+$env:AGRIOPS_AUTH_BEARER = gcloud auth print-identity-token
+./run.ps1
+```

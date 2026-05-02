@@ -4,6 +4,7 @@ interface Options {
   project?: string;
   region: string;
   repository: string;
+  deployerServiceAccount?: string;
   runtimeServiceAccount?: string;
   tokenSecret: string;
   sessionSecret: string;
@@ -71,6 +72,10 @@ function parseArgs(argv: string[]): Options {
         options.runtimeServiceAccount = next;
         if (inlineValue === undefined) i++;
         break;
+      case "--deployer-service-account":
+        options.deployerServiceAccount = next;
+        if (inlineValue === undefined) i++;
+        break;
       case "--token-secret":
         options.tokenSecret = next;
         if (inlineValue === undefined) i++;
@@ -100,6 +105,7 @@ Options:
   --project <id>                    GCP project ID. Defaults to gcloud config project.
   --region <region>                 Region. Default: asia-northeast1.
   --repo <name>                     Artifact Registry repo. Default: agriops-mcp.
+  --deployer-service-account <email> GitHub Actions deployer service account email.
   --runtime-service-account <email> Runtime service account email.
   --token-secret <name>             Secret Manager token key. Default: agriops-token-enc-key.
   --session-secret <name>           Secret Manager cookie key. Default: agriops-session-cookie-secret.
@@ -134,6 +140,19 @@ function command(lines: string[]): string {
   return lines.join(" \\\n  ");
 }
 
+function parsePolicy(output: string): Array<{ role?: string; members?: string[] }> {
+  const parsed = JSON.parse(output) as { bindings?: Array<{ role?: string; members?: string[] }> };
+  return parsed.bindings ?? [];
+}
+
+function hasBinding(
+  bindings: Array<{ role?: string; members?: string[] }>,
+  role: string,
+  member: string,
+): boolean {
+  return bindings.some((binding) => binding.role === role && binding.members?.includes(member));
+}
+
 function main(): void {
   const options = parseArgs(process.argv.slice(2));
   const configuredProject = tryGcloud(["config", "get-value", "project"]);
@@ -143,6 +162,7 @@ function main(): void {
   }
   const runtimeSa =
     options.runtimeServiceAccount ?? `agriops-runtime@${project}.iam.gserviceaccount.com`;
+  const deployerSa = options.deployerServiceAccount;
   const results: CheckResult[] = [];
 
   const account = tryGcloud(["auth", "list", "--filter=status:ACTIVE", "--format=value(account)"]);
@@ -230,6 +250,131 @@ function main(): void {
       `--project=${project}`,
     ]),
   });
+
+  if (deployerSa) {
+    const deployerMember = `serviceAccount:${deployerSa}`;
+    const deployer = tryGcloud([
+      "iam",
+      "service-accounts",
+      "describe",
+      deployerSa,
+      `--project=${project}`,
+      "--format=value(email)",
+    ]);
+    pushResult(results, {
+      name: "deployer service account",
+      ok: deployer.ok,
+      detail: deployer.ok ? deployerSa : deployer.err,
+      fix: command([
+        "gcloud iam service-accounts create agriops-github-deployer",
+        '--display-name="AgriOps MCP GitHub Actions deployer"',
+        `--project=${project}`,
+      ]),
+    });
+
+    const runtimePolicy = tryGcloud([
+      "iam",
+      "service-accounts",
+      "get-iam-policy",
+      runtimeSa,
+      `--project=${project}`,
+      "--format=json",
+    ]);
+    const runtimeActAs =
+      runtimePolicy.ok &&
+      hasBinding(parsePolicy(runtimePolicy.out), "roles/iam.serviceAccountUser", deployerMember);
+    pushResult(results, {
+      name: "deployer can act as runtime service account",
+      ok: runtimeActAs,
+      detail: runtimeActAs
+        ? `${deployerSa} -> ${runtimeSa}`
+        : runtimePolicy.ok
+          ? `missing roles/iam.serviceAccountUser on ${runtimeSa} for ${deployerMember}`
+          : runtimePolicy.err,
+      fix: command([
+        "gcloud iam service-accounts add-iam-policy-binding",
+        runtimeSa,
+        `--project=${project}`,
+        `--member="${deployerMember}"`,
+        "--role=roles/iam.serviceAccountUser",
+      ]),
+    });
+
+    const projectNumber = tryGcloud([
+      "projects",
+      "describe",
+      project,
+      "--format=value(projectNumber)",
+    ]);
+    const buildWorkerSa = projectNumber.ok
+      ? `${projectNumber.out}-compute@developer.gserviceaccount.com`
+      : undefined;
+    if (buildWorkerSa) {
+      const buildWorkerPolicy = tryGcloud([
+        "iam",
+        "service-accounts",
+        "get-iam-policy",
+        buildWorkerSa,
+        `--project=${project}`,
+        "--format=json",
+      ]);
+      const buildWorkerActAs =
+        buildWorkerPolicy.ok &&
+        hasBinding(
+          parsePolicy(buildWorkerPolicy.out),
+          "roles/iam.serviceAccountUser",
+          deployerMember,
+        );
+      pushResult(results, {
+        name: "deployer can act as Cloud Build worker service account",
+        ok: buildWorkerActAs,
+        detail: buildWorkerActAs
+          ? `${deployerSa} -> ${buildWorkerSa}`
+          : buildWorkerPolicy.ok
+            ? `missing roles/iam.serviceAccountUser on ${buildWorkerSa} for ${deployerMember}`
+            : buildWorkerPolicy.err,
+        fix: command([
+          "gcloud iam service-accounts add-iam-policy-binding",
+          buildWorkerSa,
+          `--project=${project}`,
+          `--member="${deployerMember}"`,
+          "--role=roles/iam.serviceAccountUser",
+        ]),
+      });
+    }
+
+    const deployerPolicy = tryGcloud([
+      "iam",
+      "service-accounts",
+      "get-iam-policy",
+      deployerSa,
+      `--project=${project}`,
+      "--format=json",
+    ]);
+    const tokenCreator =
+      deployerPolicy.ok &&
+      hasBinding(
+        parsePolicy(deployerPolicy.out),
+        "roles/iam.serviceAccountTokenCreator",
+        deployerMember,
+      );
+    pushResult(results, {
+      name: "deployer can mint Cloud Run smoke-test ID tokens",
+      ok: tokenCreator,
+      detail: tokenCreator
+        ? `${deployerSa} has self Token Creator`
+        : deployerPolicy.ok
+          ? `missing roles/iam.serviceAccountTokenCreator on ${deployerSa} for ${deployerMember}`
+          : deployerPolicy.err,
+      fix: command([
+        "gcloud iam service-accounts add-iam-policy-binding",
+        deployerSa,
+        `--project=${project}`,
+        `--member="${deployerMember}"`,
+        "--role=roles/iam.serviceAccountTokenCreator",
+      ]),
+    });
+  }
 
   const secrets = tryGcloud(["secrets", "list", `--project=${project}`, "--format=value(name)"]);
   const secretNames = new Set(
@@ -341,6 +486,37 @@ function main(): void {
       "--substitutions=_MCP_BASE_URL=<public-url>",
     ]),
   });
+
+  if (deployerSa && service.ok) {
+    const runPolicy = tryGcloud([
+      "run",
+      "services",
+      "get-iam-policy",
+      "agriops-mcp",
+      `--region=${options.region}`,
+      `--project=${project}`,
+      "--format=json",
+    ]);
+    const deployerMember = `serviceAccount:${deployerSa}`;
+    const canInvoke =
+      runPolicy.ok && hasBinding(parsePolicy(runPolicy.out), "roles/run.invoker", deployerMember);
+    pushResult(results, {
+      name: "deployer can invoke private Cloud Run service",
+      ok: canInvoke,
+      detail: canInvoke
+        ? `${deployerSa} has roles/run.invoker on agriops-mcp`
+        : runPolicy.ok
+          ? `missing roles/run.invoker on agriops-mcp for ${deployerMember}`
+          : runPolicy.err,
+      fix: command([
+        "gcloud run services add-iam-policy-binding agriops-mcp",
+        `--region=${options.region}`,
+        `--project=${project}`,
+        `--member="${deployerMember}"`,
+        "--role=roles/run.invoker",
+      ]),
+    });
+  }
 
   console.log(`AgriOps MCP deploy preflight: project=${project}, region=${options.region}`);
   let failed = 0;

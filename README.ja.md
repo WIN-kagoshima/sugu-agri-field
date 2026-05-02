@@ -60,6 +60,27 @@ npm run start:http        # $PORT (default 3001) で待ち受け
 - `GET /.well-known/mcp-server.json` — Server Card（registries 用）
 - `GET /healthz` — ヘルスチェック
 
+### デプロイ済み参照エンドポイント
+
+初回の本番 Cloud Run デプロイは以下で稼働しています。
+
+```text
+https://agriops-mcp-n5vdix22hq-an.a.run.app
+```
+
+デフォルトでは IAM 保護されています。運用者は次で確認できます。
+
+```bash
+TOKEN="$(gcloud auth print-identity-token)"
+npm run deploy:smoke -- \
+  --base-url=https://agriops-mcp-n5vdix22hq-an.a.run.app \
+  --health-path=/livez \
+  --auth-bearer="$TOKEN"
+```
+
+この smoke test は `/livez`, `/readyz`, Server Card, MCP `initialize`,
+`tools/list`, `prompts/list`, `resources/list` を確認します。
+
 ## 提供ツール
 
 | 名前 | Phase | 副作用 | 概要 |

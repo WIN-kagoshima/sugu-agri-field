@@ -107,6 +107,27 @@ The server exposes:
 
 Production deployment, key rotation, incident response, and SLO targets are documented in [`docs/runbook.md`](docs/runbook.md).
 
+### Deployed reference endpoint
+
+The first production Cloud Run deployment is live at:
+
+```text
+https://agriops-mcp-n5vdix22hq-an.a.run.app
+```
+
+It is IAM-protected by default. Operators can verify it with:
+
+```bash
+TOKEN="$(gcloud auth print-identity-token)"
+npm run deploy:smoke -- \
+  --base-url=https://agriops-mcp-n5vdix22hq-an.a.run.app \
+  --health-path=/livez \
+  --auth-bearer="$TOKEN"
+```
+
+The smoke test checks `/livez`, `/readyz`, the Server Card, MCP `initialize`,
+`tools/list`, `prompts/list`, and `resources/list`.
+
 ## Tools
 
 | Name | Phase | Side effect | Summary |

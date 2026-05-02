@@ -3,14 +3,19 @@ set -euo pipefail
 
 BASE_URL="${AGRIOPS_BASE_URL:-http://localhost:3001}"
 REQ_ID="${AGRIOPS_REQ_ID:-curl-example-$(date +%s)}"
+AUTH_ARGS=()
+if [[ -n "${AGRIOPS_AUTH_BEARER:-}" ]]; then
+  AUTH_ARGS=(-H "authorization: Bearer ${AGRIOPS_AUTH_BEARER}")
+fi
 
 echo "▶ Server card:"
-curl -sS "$BASE_URL/.well-known/mcp-server.json" | head -c 1000
+curl -sS "${AUTH_ARGS[@]}" "$BASE_URL/.well-known/mcp-server.json" | head -c 1000
 echo
 echo
 
 echo "▶ tools/list:"
 curl -sS "$BASE_URL/mcp" \
+  "${AUTH_ARGS[@]}" \
   -H "content-type: application/json" \
   -H "accept: application/json, text/event-stream" \
   -H "x-request-id: $REQ_ID" \
@@ -21,6 +26,7 @@ echo
 
 echo "▶ tools/call get_weather_1km:"
 curl -sS "$BASE_URL/mcp" \
+  "${AUTH_ARGS[@]}" \
   -H "content-type: application/json" \
   -H "accept: application/json, text/event-stream" \
   -H "x-request-id: $REQ_ID" \

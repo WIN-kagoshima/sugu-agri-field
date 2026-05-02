@@ -41,6 +41,20 @@ npm run deploy:preflight -- --project=${PROJECT} --snapshot-bucket=${SNAPSHOT_BU
 Least-privilege CI deployers can add `--skip-billing` because billing state is
 an operator-owned project setup check, not a per-deploy permission.
 
+First verified production baseline (captured after the first successful GitHub
+Actions deploy; newer deploys should append a fresh line to the operations log
+or update this table during release prep):
+
+| Item | Value |
+| --- | --- |
+| Project | `mcp-win` |
+| Region | `asia-northeast1` |
+| Service URL | `https://agriops-mcp-n5vdix22hq-an.a.run.app` |
+| Ready revision | `agriops-mcp-00009-w55` |
+| Image | `asia-northeast1-docker.pkg.dev/mcp-win/agriops-mcp/agriops-mcp:4b5a4a1b-e436-41cd-8602-c16d4bcca6c0` |
+| Image digest | `sha256:1f25df522d20e2f22009ee8d7b8db84cd07d044366514c9f42a7c58e64e81de2` |
+| Smoke status | `/livez`, `/readyz`, Server Card, MCP `initialize`, `tools/list`, `prompts/list`, and `resources/list` passed |
+
 ### 2.1 Create the runtime service account
 
 ```bash
@@ -264,7 +278,12 @@ The project has a Cloud Scheduler HTTP job:
 
 Deployment-time deep checks are handled by `.github/workflows/deploy.yml`, which
 runs `npm run deploy:smoke` against `/livez`, `/readyz`, Server Card, and MCP
-`initialize`.
+`initialize`, `tools/list`, `prompts/list`, and `resources/list`.
+
+`.github/workflows/production-smoke.yml` runs the same smoke test hourly and can
+also be triggered manually. It mints an audience-bound Cloud Run ID token via
+Workload Identity Federation, so it works even while organization policy blocks
+public `allUsers` invocation.
 
 ### 3.2 Configuration knobs (env vars)
 
@@ -338,6 +357,9 @@ Recommended Cloud Monitoring SLOs:
 | 421 Misdirected Request | DNS rebinding allowlist mismatch | Set `MCP_BASE_URL` to the exact public URL Cloud Run serves at. |
 | 503 from `/readyz` with `emaff` / `famic` ok=false | Snapshot missing in container | Rebuild image with `npm run snapshots:build` first, or mount snapshots from GCS. |
 | 401 from `/metrics` | Wrong / missing `AGRIOPS_METRICS_BEARER` | Update Prometheus job's bearer token. |
+| `gcloud builds submit` fails with `*_cloudbuild` bucket permission errors | Organization policy blocks managed source staging buckets | Use `cloudbuild.remote.yaml` with `--no-source`; the build clones GitHub internally. |
+| `caller does not have permission to act as service account ...` | Deployer lacks `roles/iam.serviceAccountUser` on the runtime or Cloud Build worker service account | Run `npm run deploy:preflight -- --deployer-service-account=...` and apply its fix command. |
+| `No identity token can be obtained from the current credentials` | WIF-generated credential file cannot mint an ID token via `gcloud auth print-identity-token` | Use `google-github-actions/auth@v2` with `token_format: id_token` as in `deploy.yml` / `production-smoke.yml`. |
 | Tool returns "safety cap" error | Single tool produced > 1 MiB JSON | Lower `limit`, narrow filters, or paginate via `cursor`. |
 | Rate-limit warnings on legitimate user | Single IP hosting many users | Migrate to a per-user limit keyed off OAuth `sub`, not IP. |
 
@@ -354,6 +376,16 @@ gcloud run services update-traffic agriops-mcp \
 ```
 
 Always pair a rollback with a follow-up Postmortem ticket.
+
+To inspect the current and prior revisions:
+
+```bash
+gcloud run revisions list \
+  --service=agriops-mcp \
+  --region=asia-northeast1 \
+  --project=${PROJECT} \
+  --limit=10
+```
 
 ---
 
@@ -419,8 +451,9 @@ Inputs:
   `snapshots/raw/famic-pesticide.csv`.
 
 The resulting `*.sqlite` files stay untracked, but `.gcloudignore` allows them
-into Cloud Build source uploads so first-party deploys can bake snapshots into
-the image. GitHub Actions deploys restore the same files from GCS:
+into local Cloud Build source uploads so first-party deploys can bake snapshots
+into the image. GitHub Actions deploys use `cloudbuild.remote.yaml` and restore
+the same files from GCS after cloning the repository:
 
 ```bash
 gcloud storage cp snapshots/emaff-fude-kagoshima.sqlite \
@@ -432,7 +465,32 @@ gcloud storage cp snapshots/famic-pesticide-2026.sqlite \
 For much larger datasets, mount snapshots from GCS instead of baking them into
 the image.
 
-### 6.3 Dependency updates
+### 6.3 Rename cleanup candidates
+
+The project was renamed from SuguAgriField to AgriOps MCP. After at least one
+successful release and one clean rollback drill, audit and remove the remaining
+legacy identities if they are no longer referenced:
+
+```bash
+gcloud iam service-accounts list \
+  --project=${PROJECT} \
+  --filter='email~sugu-agri' \
+  --format='table(email,displayName)'
+```
+
+Known candidates observed during bootstrap:
+
+| Legacy identity | Notes |
+| --- | --- |
+| `sugu-agri-runtime@mcp-win.iam.gserviceaccount.com` | Old runtime SA. Confirm no Cloud Run revision uses it before deletion. |
+| `sugu-agri-github-deployer@mcp-win.iam.gserviceaccount.com` | Old deployer SA. Remove IAM bindings before deletion. |
+| `sugu-agri-monitor@mcp-win.iam.gserviceaccount.com` | Old synthetic monitor SA. Confirm no Scheduler job references it. |
+
+Do not delete these during an incident. First remove IAM bindings, run
+`deploy:preflight`, then delete the service accounts in a separate maintenance
+window.
+
+### 6.4 Dependency updates
 
 Dependabot is configured for npm, Actions, and Docker (weekly,
 grouped). Merge the green-CI PRs; reject anything that fails

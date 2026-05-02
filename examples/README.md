@@ -14,6 +14,16 @@ All three target the same surface so you can compare them side by side.
 None of them require any keys, snapshots, or external accounts: they
 exercise Phase 0 (`get_weather_1km`, Open-Meteo) only.
 
+The HTTP example can also target the IAM-protected Cloud Run reference
+deployment if you provide an identity token:
+
+```bash
+export AGRIOPS_BASE_URL=https://agriops-mcp-n5vdix22hq-an.a.run.app
+export AGRIOPS_AUTH_BEARER="$(gcloud auth print-identity-token)"
+cd examples/http-curl
+./run.sh
+```
+
 ## Prerequisites
 
 ```bash

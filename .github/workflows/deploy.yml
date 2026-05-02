@@ -22,6 +22,8 @@ env:
   REPOSITORY: agriops-mcp
   SERVICE: agriops-mcp
   MCP_BASE_URL: ${{ secrets.MCP_BASE_URL }}
+  GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+  GCP_DEPLOYER_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
   GCP_RUNTIME_SERVICE_ACCOUNT: ${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }}
   SNAPSHOT_BUCKET: ${{ secrets.SNAPSHOT_BUCKET }}
 
@@ -41,34 +43,49 @@ jobs:
           cache: npm
 
       - name: Validate and normalise deployment inputs
+        id: deploy-inputs
         run: |
           # Strip CR/LF that often sneak in when secrets are pasted with a trailing newline
           PROJECT_ID="$(printf '%s' "$PROJECT_ID" | tr -d '\r\n' | xargs)"
           MCP_BASE_URL="$(printf '%s' "$MCP_BASE_URL" | tr -d '\r\n' | xargs)"
+          GCP_WIF_PROVIDER="$(printf '%s' "$GCP_WIF_PROVIDER" | tr -d '\r\n' | xargs)"
+          GCP_DEPLOYER_SERVICE_ACCOUNT="$(printf '%s' "$GCP_DEPLOYER_SERVICE_ACCOUNT" | tr -d '\r\n' | xargs)"
           GCP_RUNTIME_SERVICE_ACCOUNT="$(printf '%s' "$GCP_RUNTIME_SERVICE_ACCOUNT" | tr -d '\r\n' | xargs)"
           SNAPSHOT_BUCKET="$(printf '%s' "$SNAPSHOT_BUCKET" | tr -d '\r\n' | xargs)"
           test -n "$PROJECT_ID" || { echo "GCP_PROJECT_ID secret is empty"; exit 1; }
           test -n "$MCP_BASE_URL" || { echo "MCP_BASE_URL secret is empty"; exit 1; }
+          test -n "$GCP_WIF_PROVIDER" || { echo "GCP_WIF_PROVIDER secret is empty"; exit 1; }
+          test -n "$GCP_DEPLOYER_SERVICE_ACCOUNT" || { echo "GCP_DEPLOYER_SERVICE_ACCOUNT secret is empty"; exit 1; }
           test -n "$GCP_RUNTIME_SERVICE_ACCOUNT" || { echo "GCP_RUNTIME_SERVICE_ACCOUNT secret is empty"; exit 1; }
           test -n "$SNAPSHOT_BUCKET" || { echo "SNAPSHOT_BUCKET secret is empty"; exit 1; }
           {
             echo "PROJECT_ID=$PROJECT_ID"
             echo "MCP_BASE_URL=$MCP_BASE_URL"
+            echo "GCP_WIF_PROVIDER=$GCP_WIF_PROVIDER"
+            echo "GCP_DEPLOYER_SERVICE_ACCOUNT=$GCP_DEPLOYER_SERVICE_ACCOUNT"
             echo "GCP_RUNTIME_SERVICE_ACCOUNT=$GCP_RUNTIME_SERVICE_ACCOUNT"
             echo "SNAPSHOT_BUCKET=$SNAPSHOT_BUCKET"
           } >> "$GITHUB_ENV"
+          {
+            echo "project_id=$PROJECT_ID"
+            echo "mcp_base_url=$MCP_BASE_URL"
+            echo "gcp_wif_provider=$GCP_WIF_PROVIDER"
+            echo "gcp_deployer_service_account=$GCP_DEPLOYER_SERVICE_ACCOUNT"
+            echo "gcp_runtime_service_account=$GCP_RUNTIME_SERVICE_ACCOUNT"
+            echo "snapshot_bucket=$SNAPSHOT_BUCKET"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ steps.deploy-inputs.outputs.gcp_wif_provider }}
+          service_account: ${{ steps.deploy-inputs.outputs.gcp_deployer_service_account }}
           # Explicit project_id ensures the credentials file carries
           # quota_project_id, which Service Usage uses to authorize
           # cloudbuild.googleapis.com requests. Without it, gcloud falls back
           # to "no quota project" and Service Usage fails with
           # "user is forbidden from accessing the bucket [***_cloudbuild]".
-          project_id: ${{ env.PROJECT_ID }}
+          project_id: ${{ steps.deploy-inputs.outputs.project_id }}
 
       - name: Setup gcloud
         uses: google-github-actions/setup-gcloud@v2
@@ -90,6 +107,7 @@ jobs:
           npm run deploy:preflight -- \
             --project="$PROJECT_ID" \
             --region="$REGION" \
+            --deployer-service-account="$GCP_DEPLOYER_SERVICE_ACCOUNT" \
             --runtime-service-account="$GCP_RUNTIME_SERVICE_ACCOUNT" \
             --snapshot-bucket="$SNAPSHOT_BUCKET" \
             --skip-billing
@@ -126,10 +144,10 @@ jobs:
         id: cloud-run-auth
         uses: google-github-actions/auth@v2
         with:
-          workload_identity_provider: ${{ secrets.GCP_WIF_PROVIDER }}
-          service_account: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+          workload_identity_provider: ${{ steps.deploy-inputs.outputs.gcp_wif_provider }}
+          service_account: ${{ steps.deploy-inputs.outputs.gcp_deployer_service_account }}
           token_format: id_token
-          id_token_audience: ${{ env.MCP_BASE_URL }}
+          id_token_audience: ${{ steps.deploy-inputs.outputs.mcp_base_url }}
           id_token_include_email: true
 
       - name: Smoke test Cloud Run

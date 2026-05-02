@@ -9,9 +9,12 @@ $Headers = @{
     "accept"           = "application/json, text/event-stream"
     "x-request-id"     = $ReqId
 }
+if ($env:AGRIOPS_AUTH_BEARER) {
+    $Headers["authorization"] = "Bearer $env:AGRIOPS_AUTH_BEARER"
+}
 
 Write-Host "▶ Server card:" -ForegroundColor Cyan
-Invoke-RestMethod -Uri "$BaseUrl/.well-known/mcp-server.json" | ConvertTo-Json -Depth 5
+Invoke-RestMethod -Uri "$BaseUrl/.well-known/mcp-server.json" -Headers $Headers | ConvertTo-Json -Depth 5
 Write-Host ""
 
 Write-Host "▶ tools/list:" -ForegroundColor Cyan

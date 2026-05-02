@@ -227,6 +227,25 @@ returned by an upstream are stripped before forwarding to the client.
 
 ## 8. Capability negotiation & fallbacks
 
+Deployment smoke tests validate the live Streamable HTTP surface with the same
+JSON-RPC methods a host uses:
+
+| Method | Expected production signal |
+|---|---|
+| `initialize` | `serverInfo.name === "agriops-mcp"` |
+| `tools/list` | Includes `get_weather_1km`, `search_farmland`, and `open_dashboard` |
+| `prompts/list` | Includes `field_summary`, `pesticide_advice`, and `staff_deploy_plan` |
+| `resources/list` | Includes `ui://agriops/dashboard.html` |
+
+Run the deployed check with:
+
+```bash
+npm run deploy:smoke -- \
+  --base-url=https://agriops-mcp-n5vdix22hq-an.a.run.app \
+  --health-path=/livez \
+  --auth-bearer="$(gcloud auth print-identity-token)"
+```
+
 The server advertises:
 
 ```jsonc

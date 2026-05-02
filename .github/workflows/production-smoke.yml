@@ -1,0 +1,69 @@
+name: Production smoke
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  MCP_BASE_URL: ${{ secrets.MCP_BASE_URL }}
+  GCP_WIF_PROVIDER: ${{ secrets.GCP_WIF_PROVIDER }}
+  GCP_DEPLOYER_SERVICE_ACCOUNT: ${{ secrets.GCP_DEPLOYER_SERVICE_ACCOUNT }}
+
+jobs:
+  smoke:
+    name: Cloud Run MCP smoke
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Validate and normalise inputs
+        id: smoke-inputs
+        run: |
+          MCP_BASE_URL="$(printf '%s' "$MCP_BASE_URL" | tr -d '\r\n' | xargs)"
+          GCP_WIF_PROVIDER="$(printf '%s' "$GCP_WIF_PROVIDER" | tr -d '\r\n' | xargs)"
+          GCP_DEPLOYER_SERVICE_ACCOUNT="$(printf '%s' "$GCP_DEPLOYER_SERVICE_ACCOUNT" | tr -d '\r\n' | xargs)"
+          test -n "$MCP_BASE_URL" || { echo "MCP_BASE_URL secret is empty"; exit 1; }
+          test -n "$GCP_WIF_PROVIDER" || { echo "GCP_WIF_PROVIDER secret is empty"; exit 1; }
+          test -n "$GCP_DEPLOYER_SERVICE_ACCOUNT" || { echo "GCP_DEPLOYER_SERVICE_ACCOUNT secret is empty"; exit 1; }
+          {
+            echo "MCP_BASE_URL=$MCP_BASE_URL"
+            echo "GCP_WIF_PROVIDER=$GCP_WIF_PROVIDER"
+            echo "GCP_DEPLOYER_SERVICE_ACCOUNT=$GCP_DEPLOYER_SERVICE_ACCOUNT"
+          } >> "$GITHUB_ENV"
+          {
+            echo "mcp_base_url=$MCP_BASE_URL"
+            echo "gcp_wif_provider=$GCP_WIF_PROVIDER"
+            echo "gcp_deployer_service_account=$GCP_DEPLOYER_SERVICE_ACCOUNT"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Mint Cloud Run identity token
+        id: cloud-run-auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ steps.smoke-inputs.outputs.gcp_wif_provider }}
+          service_account: ${{ steps.smoke-inputs.outputs.gcp_deployer_service_account }}
+          token_format: id_token
+          id_token_audience: ${{ steps.smoke-inputs.outputs.mcp_base_url }}
+          id_token_include_email: true
+
+      - name: Install smoke-test dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Smoke test production Cloud Run
+        run: |
+          npm run deploy:smoke -- \
+            --base-url="$MCP_BASE_URL" \
+            --health-path=/livez \
+            --auth-bearer="${{ steps.cloud-run-auth.outputs.id_token }}"

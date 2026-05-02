@@ -9,6 +9,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 ## [Unreleased]
 
 ### Added — snapshot-backed production deploys
+- Added `.github/workflows/production-smoke.yml`, an hourly/manual production smoke workflow that mints a Cloud Run ID token through Workload Identity Federation and runs `deploy:smoke` against the IAM-protected service.
 - Cloud Build can now restore baked SQLite snapshots from a GCS bucket before building the Cloud Run image, so GitHub Actions deploys stay `/readyz`-clean without committing generated database files.
 - GitHub Actions deploys require `SNAPSHOT_BUCKET`, run `npm run deploy:preflight` before Cloud Build, and no longer pass `--allow-not-ready` to the deployment smoke test.
 - `npm run deploy:preflight` now supports `--snapshot-bucket` and verifies the required `emaff-fude-kagoshima.sqlite` and `famic-pesticide-2026.sqlite` objects before deployment.
@@ -21,6 +22,10 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - The JMA User-Agent now matches the package version.
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- `deploy:smoke` now validates live MCP `tools/list`, `prompts/list`, and `resources/list` in addition to `/livez`, `/readyz`, the Server Card, and `initialize`.
+- `deploy:preflight` now checks deployer IAM for runtime `actAs`, Cloud Build worker `actAs`, self Token Creator for Cloud Run ID-token minting, and private Cloud Run `roles/run.invoker`.
+- The runbook now records the first verified production baseline (Cloud Run URL, revision, image tag/digest, and smoke status), rollback inspection commands, scheduled smoke monitoring, and legacy `sugu-agri-*` cleanup candidates.
+- HTTP curl examples now support `AGRIOPS_AUTH_BEARER`, so they can target the IAM-protected Cloud Run reference deployment.
 - GitHub Actions smoke tests now mint a Cloud Run audience-bound ID token through `google-github-actions/auth@v2` instead of calling `gcloud auth print-identity-token`, which is unsupported for the generated WIF credential file. The runbook now documents the deployer's self `roles/iam.serviceAccountTokenCreator` binding used for this token minting.
 - The runbook now documents the required `roles/iam.serviceAccountUser` bindings for the GitHub deployer service account on both the Cloud Run runtime service account and the Cloud Build worker service account. Without the latter, `gcloud builds submit` fails with `caller does not have permission to act as service account ...`.
 - GitHub Actions deploys now use `cloudbuild.remote.yaml` with `gcloud builds submit --no-source`. The build clones the repository inside Cloud Build, restores snapshots from GCS, and then builds/deploys, fully bypassing managed `*_cloudbuild` source-staging bucket uploads that can be blocked by organization policy.
