@@ -63,7 +63,7 @@
   "dependencies": {
     "@modelcontextprotocol/ext-apps": "^1.7.1",
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "better-sqlite3": "^11.5.0",
+    "better-sqlite3": "^12.9.0",
     "cookie-parser": "^1.4.7",
     "express": "^4.21.2",
     "zod": "^3.25.0"
