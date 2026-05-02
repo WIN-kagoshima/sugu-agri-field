@@ -8,6 +8,18 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 
 ## [Unreleased]
 
+### Added — snapshot-backed production deploys
+- Cloud Build can now restore baked SQLite snapshots from a GCS bucket before building the Cloud Run image, so GitHub Actions deploys stay `/readyz`-clean without committing generated database files.
+- GitHub Actions deploys require `SNAPSHOT_BUCKET`, run `npm run deploy:preflight` before Cloud Build, and no longer pass `--allow-not-ready` to the deployment smoke test.
+- `npm run deploy:preflight` now supports `--snapshot-bucket` and verifies the required `emaff-fude-kagoshima.sqlite` and `famic-pesticide-2026.sqlite` objects before deployment.
+- The eMAFF snapshot builder accepts multiple raw GeoJSON/JSON files, including municipality JSON files extracted from the official Kagoshima ZIP.
+- The npm package now includes `docs/**/*.md` and `examples/**/*`, so README links remain useful from the published tarball.
+
+### Changed
+- Cloud Run deployments are private by default; `cloudbuild.yaml` no longer requests `--allow-unauthenticated`.
+- Security reporting contact is now `info@win-g-c.com` in both `SECURITY.md` and the Server Card.
+- The JMA User-Agent now matches the package version.
+
 ### Fixed — Cloud Build / Cloud Run deploy path
 - Documented the authenticated Cloud Scheduler `/livez` synthetic monitor used while organization policy blocks public Cloud Run invocation.
 - GitHub Actions deploys now install smoke-test dependencies and verify the IAM-protected Cloud Run service after each deployment.

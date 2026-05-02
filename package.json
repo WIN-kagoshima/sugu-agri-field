@@ -24,6 +24,8 @@
     "dist/**/*.js",
     "dist/**/*.d.ts",
     "dist/ui/dashboard.html",
+    "docs/**/*.md",
+    "examples/**/*",
     "snapshots/README.md",
     "LICENSE",
     "NOTICE",

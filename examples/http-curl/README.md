@@ -25,7 +25,7 @@ The script runs three calls and dumps each response:
 
 1. `GET /.well-known/mcp-server.json` — Server Card.
 2. `POST /mcp` `tools/list` — list of registered tools.
-3. `POST /mcp` `tools/call get_weather_1km` for AgriOpskabe Field.
+3. `POST /mcp` `tools/call get_weather_1km` for an AgriOps sample field.
 
 Notice how every response carries an `X-Request-Id` header. If the
 caller supplies one, the server reuses it — handy for tracing across

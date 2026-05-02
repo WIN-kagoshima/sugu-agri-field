@@ -4,7 +4,7 @@ A self-contained Node script that:
 
 1. Spawns `dist/server.js --stdio` as a child process.
 2. Connects via `StdioClientTransport`.
-3. Lists tools and calls `get_weather_1km` for AgriOpskabe Field
+3. Lists tools and calls `get_weather_1km` for an AgriOps sample field
    (lat 31.55, lng 130.55).
 4. Prints the structured forecast and the upstream attribution string.
 

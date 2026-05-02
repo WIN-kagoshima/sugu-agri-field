@@ -1,7 +1,7 @@
 # AgriOps MCP — Client examples
 
 Three minimal clients that connect to the AgriOps MCP server,
-list the available tools, and call `get_weather_1km` for AgriOpskabe
+list the available tools, and call `get_weather_1km` for an AgriOps sample
 Field (鹿児島県, ~31.5N 130.5E).
 
 | Folder | Transport | What it shows |
