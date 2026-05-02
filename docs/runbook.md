@@ -207,6 +207,13 @@ gcloud iam service-accounts add-iam-policy-binding \
   --project=${PROJECT} \
   --member="serviceAccount:${DEPLOYER}" \
   --role=roles/iam.serviceAccountUser
+
+# The deploy workflow mints an ID token for IAM-protected Cloud Run smoke tests.
+gcloud iam service-accounts add-iam-policy-binding \
+  ${DEPLOYER} \
+  --project=${PROJECT} \
+  --member="serviceAccount:${DEPLOYER}" \
+  --role=roles/iam.serviceAccountTokenCreator
 ```
 
 > When pasting these secrets into the GitHub UI, make sure there is **no

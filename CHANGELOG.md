@@ -21,6 +21,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - The JMA User-Agent now matches the package version.
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- GitHub Actions smoke tests now mint a Cloud Run audience-bound ID token through `google-github-actions/auth@v2` instead of calling `gcloud auth print-identity-token`, which is unsupported for the generated WIF credential file. The runbook now documents the deployer's self `roles/iam.serviceAccountTokenCreator` binding used for this token minting.
 - The runbook now documents the required `roles/iam.serviceAccountUser` bindings for the GitHub deployer service account on both the Cloud Run runtime service account and the Cloud Build worker service account. Without the latter, `gcloud builds submit` fails with `caller does not have permission to act as service account ...`.
 - GitHub Actions deploys now use `cloudbuild.remote.yaml` with `gcloud builds submit --no-source`. The build clones the repository inside Cloud Build, restores snapshots from GCS, and then builds/deploys, fully bypassing managed `*_cloudbuild` source-staging bucket uploads that can be blocked by organization policy.
 - `.dockerignore` now explicitly re-includes `snapshots/*.sqlite`, ensuring SQLite snapshots restored during Cloud Build are available to the Docker build context while raw snapshot archives remain excluded.
