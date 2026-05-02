@@ -15,7 +15,8 @@ interface SmokeResult {
 function parseArgs(argv: string[]): Options {
   const options: Options = { allowNotReady: false, healthPath: "/healthz" };
   for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
+    const arg = argv[i]?.trim();
+    if (arg === undefined || arg === "") continue;
     if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -24,29 +25,32 @@ function parseArgs(argv: string[]): Options {
       options.allowNotReady = true;
       continue;
     }
-    const next = argv[i + 1];
-    if (!next || next.startsWith("--")) {
-      throw new Error(`Missing value for ${arg}`);
+    const eq = arg.indexOf("=");
+    const key = (eq >= 0 ? arg.slice(0, eq) : arg).trim();
+    const inlineValue = eq >= 0 ? arg.slice(eq + 1).trim() : undefined;
+    const next = inlineValue ?? argv[i + 1]?.trim();
+    if (next === undefined || next === "" || next.startsWith("--")) {
+      throw new Error(`Missing value for ${key}`);
     }
-    switch (arg) {
+    switch (key) {
       case "--base-url":
         options.baseUrl = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--auth-bearer":
         options.authBearer = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--health-path":
         options.healthPath = next.startsWith("/") ? next : `/${next}`;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--metrics-bearer":
         options.metricsBearer = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       default:
-        throw new Error(`Unknown argument: ${arg}`);
+        throw new Error(`Unknown argument: ${key}`);
     }
   }
   return options;

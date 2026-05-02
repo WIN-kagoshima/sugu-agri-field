@@ -40,12 +40,23 @@ jobs:
           node-version: 20
           cache: npm
 
-      - name: Validate deployment inputs
+      - name: Validate and normalise deployment inputs
         run: |
-          test -n "$PROJECT_ID"
-          test -n "$MCP_BASE_URL"
-          test -n "$GCP_RUNTIME_SERVICE_ACCOUNT"
-          test -n "$SNAPSHOT_BUCKET"
+          # Strip CR/LF that often sneak in when secrets are pasted with a trailing newline
+          PROJECT_ID="$(printf '%s' "$PROJECT_ID" | tr -d '\r\n' | xargs)"
+          MCP_BASE_URL="$(printf '%s' "$MCP_BASE_URL" | tr -d '\r\n' | xargs)"
+          GCP_RUNTIME_SERVICE_ACCOUNT="$(printf '%s' "$GCP_RUNTIME_SERVICE_ACCOUNT" | tr -d '\r\n' | xargs)"
+          SNAPSHOT_BUCKET="$(printf '%s' "$SNAPSHOT_BUCKET" | tr -d '\r\n' | xargs)"
+          test -n "$PROJECT_ID" || { echo "GCP_PROJECT_ID secret is empty"; exit 1; }
+          test -n "$MCP_BASE_URL" || { echo "MCP_BASE_URL secret is empty"; exit 1; }
+          test -n "$GCP_RUNTIME_SERVICE_ACCOUNT" || { echo "GCP_RUNTIME_SERVICE_ACCOUNT secret is empty"; exit 1; }
+          test -n "$SNAPSHOT_BUCKET" || { echo "SNAPSHOT_BUCKET secret is empty"; exit 1; }
+          {
+            echo "PROJECT_ID=$PROJECT_ID"
+            echo "MCP_BASE_URL=$MCP_BASE_URL"
+            echo "GCP_RUNTIME_SERVICE_ACCOUNT=$GCP_RUNTIME_SERVICE_ACCOUNT"
+            echo "SNAPSHOT_BUCKET=$SNAPSHOT_BUCKET"
+          } >> "$GITHUB_ENV"
 
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2

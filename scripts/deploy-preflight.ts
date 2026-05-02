@@ -36,8 +36,8 @@ function parseArgs(argv: string[]): Options {
     skipBilling: false,
   };
   for (let i = 0; i < argv.length; i++) {
-    const arg = argv[i];
-    if (arg === undefined) continue;
+    const arg = argv[i]?.trim();
+    if (arg === undefined || arg === "") continue;
     if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -46,9 +46,11 @@ function parseArgs(argv: string[]): Options {
       options.skipBilling = true;
       continue;
     }
-    const [key, inlineValue] = arg.split("=", 2);
-    const next = inlineValue ?? argv[i + 1];
-    if (!next || next.startsWith("--")) {
+    const eq = arg.indexOf("=");
+    const key = (eq >= 0 ? arg.slice(0, eq) : arg).trim();
+    const inlineValue = eq >= 0 ? arg.slice(eq + 1).trim() : undefined;
+    const next = inlineValue ?? argv[i + 1]?.trim();
+    if (next === undefined || next === "" || next.startsWith("--")) {
       throw new Error(`Missing value for ${key}`);
     }
     switch (key) {

@@ -179,6 +179,11 @@ Run service. Cloud Build restores SQLite snapshots from `SNAPSHOT_BUCKET` before
 building the container, so GitHub Actions deploys do not depend on ignored local
 files being present in the checkout.
 
+> When pasting these secrets into the GitHub UI, make sure there is **no
+> trailing newline**. The deploy workflow trims whitespace and CR/LF defensively,
+> but a literal `\n` in `GCP_PROJECT_ID` will still propagate to log lines such
+> as `[***\n] is not a valid project ID.` until you re-save the secret.
+
 ---
 
 ## 3. Day-2 operations

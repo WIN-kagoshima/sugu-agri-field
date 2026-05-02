@@ -21,6 +21,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - The JMA User-Agent now matches the package version.
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- `deploy:preflight` and `deploy:smoke` now trim whitespace and CR/LF from CLI argument values, and the deploy workflow strips trailing newlines from secrets before invoking `gcloud`/preflight, preventing failures when GitHub Secrets are pasted with stray newlines.
 - Documented the authenticated Cloud Scheduler `/livez` synthetic monitor used while organization policy blocks public Cloud Run invocation.
 - GitHub Actions deploys now install smoke-test dependencies and verify the IAM-protected Cloud Run service after each deployment.
 - Cloud Build deploys now include locally built `snapshots/*.sqlite` files while still excluding raw source archives, allowing operators to bake first-party snapshots into Cloud Run images.
