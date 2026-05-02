@@ -13,7 +13,7 @@ Until `1.0.0`, only the latest minor version receives security patches. After `1
 
 **Please do not open a public GitHub issue.**
 
-Email `security@agriops.dev` (placeholder — replace with your real reporting address before publishing) with:
+Email `info@win-g-c.com` with:
 
 - A description of the issue.
 - Steps to reproduce, ideally with a minimal MCP client transcript.

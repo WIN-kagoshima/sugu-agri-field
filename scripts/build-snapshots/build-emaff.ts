@@ -36,7 +36,8 @@ interface EmaffFeatureCollection {
 }
 
 export interface BuildEmaffOptions {
-  rawPath: string;
+  rawPath?: string;
+  rawPaths?: string[];
   outPath: string;
 }
 
@@ -67,19 +68,17 @@ export interface BuildEmaffOptions {
  *   CREATE INDEX idx_field_crop ON field(registered_crop);
  */
 export async function buildEmaffSnapshot(options: BuildEmaffOptions): Promise<BuilderResult> {
-  if (!existsSync(options.rawPath)) {
+  const rawPaths = resolveRawPaths(options);
+  const missingPaths = rawPaths.filter((path) => !existsSync(path));
+  if (missingPaths.length > 0) {
     return {
       name: "emaff",
       status: "skipped",
-      message: `Raw eMAFF GeoJSON not found at ${options.rawPath}. Download the prefecture dataset from the official eMAFF open-data portal (https://open.fude.maff.go.jp/) and place the *.geojson there.`,
+      message: `Raw eMAFF GeoJSON not found at ${missingPaths.join(", ")}. Download the prefecture dataset from the official eMAFF open-data portal (https://open.fude.maff.go.jp/) and place the *.geojson there.`,
     };
   }
 
-  const raw = await readFile(options.rawPath, "utf-8");
-  const collection = JSON.parse(raw) as EmaffFeatureCollection;
-  if (collection.type !== "FeatureCollection" || !Array.isArray(collection.features)) {
-    throw new Error("expected a GeoJSON FeatureCollection at the top level");
-  }
+  const features = await readFeatures(rawPaths);
 
   const db = new Database(options.outPath);
   try {
@@ -146,16 +145,35 @@ export async function buildEmaffSnapshot(options: BuildEmaffOptions): Promise<Bu
       return count;
     });
 
-    const inserted = insertAll(collection.features);
+    const inserted = insertAll(features);
     db.exec("ANALYZE");
     return {
       name: "emaff",
       status: "ok",
-      message: `Wrote ${inserted} field(s) to ${options.outPath}`,
+      message: `Wrote ${inserted} field(s) from ${rawPaths.length} GeoJSON file(s) to ${options.outPath}`,
     };
   } finally {
     db.close();
   }
+}
+
+function resolveRawPaths(options: BuildEmaffOptions): string[] {
+  if (options.rawPaths && options.rawPaths.length > 0) return options.rawPaths;
+  if (options.rawPath) return [options.rawPath];
+  throw new Error("expected rawPath or rawPaths");
+}
+
+async function readFeatures(rawPaths: string[]): Promise<EmaffFeature[]> {
+  const features: EmaffFeature[] = [];
+  for (const rawPath of rawPaths) {
+    const raw = await readFile(rawPath, "utf-8");
+    const collection = JSON.parse(raw) as EmaffFeatureCollection;
+    if (collection.type !== "FeatureCollection" || !Array.isArray(collection.features)) {
+      throw new Error(`expected a GeoJSON FeatureCollection at the top level: ${rawPath}`);
+    }
+    features.push(...collection.features);
+  }
+  return features;
 }
 
 function computeCentroid(geom: EmaffFeature["geometry"]): { lat: number; lng: number } | null {

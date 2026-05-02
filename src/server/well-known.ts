@@ -70,7 +70,7 @@ export function buildServerCard(options: WellKnownOptions): Record<string, unkno
     license: "Apache-2.0",
     contact: {
       issues: "https://github.com/WIN-kagoshima/agriops-mcp/issues",
-      security: "security@agriops.dev",
+      security: "info@win-g-c.com",
     },
     endpoints: {
       mcp: `${options.baseUrl}/mcp`,

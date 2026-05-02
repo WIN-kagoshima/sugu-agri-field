@@ -28,12 +28,14 @@ serverless, swap it for a Memorystore / Cloud SQL backend.
 
 Before creating resources, run the automated preflight check. It verifies the
 active gcloud account, billing, required APIs, Artifact Registry, runtime service
-account, Secret Manager entries, and whether the Cloud Run service already
-exists. Failed checks print copy-pasteable fix commands.
+account, Secret Manager entries, optional GCS snapshot objects, and whether the
+Cloud Run service already exists. Failed checks print copy-pasteable fix
+commands.
 
 ```bash
 PROJECT=agriops-prod
-npm run deploy:preflight -- --project=${PROJECT}
+SNAPSHOT_BUCKET=mcp-win-agriops-snapshots
+npm run deploy:preflight -- --project=${PROJECT} --snapshot-bucket=${SNAPSHOT_BUCKET}
 ```
 
 ### 2.1 Create the runtime service account
@@ -104,9 +106,11 @@ gcloud run deploy agriops-mcp \
   --timeout=60s \
   --set-env-vars=MCP_BASE_URL=https://mcp.agriops.example.com,LOG_LEVEL=info,AGRIOPS_TRUST_PROXY=1,AGRIOPS_RATE_RPS=15,AGRIOPS_RATE_BURST=45 \
   --set-secrets=AGRIOPS_TOKEN_ENC_KEY=agriops-token-enc-key:latest,SESSION_COOKIE_SECRET=agriops-session-cookie-secret:latest \
-  --allow-unauthenticated \
   --project=${PROJECT}
 ```
+
+The deployed service is private by default. Grant `roles/run.invoker` only to
+the deployer, monitor, or client identities that need to call it.
 
 ### 2.4 Smoke test the deploy
 
@@ -163,11 +167,14 @@ these repository or environment secrets in GitHub:
 | `GCP_DEPLOYER_SERVICE_ACCOUNT` | `agriops-github-deployer@mcp-win.iam.gserviceaccount.com` |
 | `GCP_RUNTIME_SERVICE_ACCOUNT` | `agriops-runtime@mcp-win.iam.gserviceaccount.com` |
 | `MCP_BASE_URL` | `https://agriops-mcp-n5vdix22hq-an.a.run.app` |
+| `SNAPSHOT_BUCKET` | `mcp-win-agriops-snapshots` |
 
 The deploy workflow runs Cloud Build and then executes `npm run deploy:smoke`
 with an identity token. Because organization policy currently blocks
 `allUsers`, the deployer service account has `roles/run.invoker` on the Cloud
-Run service.
+Run service. Cloud Build restores SQLite snapshots from `SNAPSHOT_BUCKET` before
+building the container, so GitHub Actions deploys do not depend on ignored local
+files being present in the checkout.
 
 ---
 
@@ -343,8 +350,9 @@ npm run snapshots:build
 Inputs:
 
 - eMAFF: complete the official questionnaire on https://open.fude.maff.go.jp/,
-  download the Kagoshima GeoJSON, and place it at
-  `snapshots/raw/emaff-fude-kagoshima.geojson`.
+  download the Kagoshima ZIP, and extract the municipality JSON files under
+  `snapshots/raw/emaff-fude-kagoshima/`. A single GeoJSON file at
+  `snapshots/raw/emaff-fude-kagoshima.geojson` is also supported.
 - FAMIC: download the official CSV ZIPs from
   https://www.acis.famic.go.jp/ddata/index2.htm and extract `R*.csv` under
   `snapshots/raw/famic*/`, or place a normalized CSV at
@@ -352,8 +360,17 @@ Inputs:
 
 The resulting `*.sqlite` files stay untracked, but `.gcloudignore` allows them
 into Cloud Build source uploads so first-party deploys can bake snapshots into
-the image. For larger datasets, push snapshots to a GCS bucket and mount via
-Cloud Run volumes instead.
+the image. GitHub Actions deploys restore the same files from GCS:
+
+```bash
+gcloud storage cp snapshots/emaff-fude-kagoshima.sqlite \
+  gs://mcp-win-agriops-snapshots/emaff-fude-kagoshima.sqlite
+gcloud storage cp snapshots/famic-pesticide-2026.sqlite \
+  gs://mcp-win-agriops-snapshots/famic-pesticide-2026.sqlite
+```
+
+For much larger datasets, mount snapshots from GCS instead of baking them into
+the image.
 
 ### 6.3 Dependency updates
 
@@ -377,5 +394,5 @@ grouped). Merge the green-CI PRs; reject anything that fails
 ## 8. Contact
 
 - On-call: see internal PagerDuty rotation `agriops-mcp`.
-- Security: see `SECURITY.md` for the private reporting channel (`security@agriops.dev`, placeholder — replace before publishing).
+- Security: see `SECURITY.md` for the private reporting channel (`info@win-g-c.com`).
 - Spec questions: [`modelcontextprotocol/specification`](https://github.com/modelcontextprotocol/specification/issues).

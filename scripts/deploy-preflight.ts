@@ -7,6 +7,7 @@ interface Options {
   runtimeServiceAccount?: string;
   tokenSecret: string;
   sessionSecret: string;
+  snapshotBucket?: string;
 }
 
 interface CheckResult {
@@ -67,6 +68,10 @@ function parseArgs(argv: string[]): Options {
         options.sessionSecret = next;
         i++;
         break;
+      case "--snapshot-bucket":
+        options.snapshotBucket = next.replace(/^gs:\/\//, "").replace(/\/+$/, "");
+        i++;
+        break;
       default:
         throw new Error(`Unknown argument: ${arg}`);
     }
@@ -87,6 +92,7 @@ Options:
   --runtime-service-account <email> Runtime service account email.
   --token-secret <name>             Secret Manager token key. Default: agriops-token-enc-key.
   --session-secret <name>           Secret Manager cookie key. Default: agriops-session-cookie-secret.
+  --snapshot-bucket <name>          Optional GCS bucket containing baked SQLite snapshots.
 `);
 }
 
@@ -232,6 +238,45 @@ function main(): void {
               `| gcloud secrets create ${secret} --data-file=- --project=${project}`,
             ]),
     });
+  }
+
+  if (options.snapshotBucket) {
+    const bucket = tryGcloud([
+      "storage",
+      "buckets",
+      "describe",
+      `gs://${options.snapshotBucket}`,
+      `--project=${project}`,
+      "--format=value(name)",
+    ]);
+    pushResult(results, {
+      name: `GCS snapshot bucket: ${options.snapshotBucket}`,
+      ok: bucket.ok,
+      detail: bucket.ok ? options.snapshotBucket : bucket.err,
+      fix: command([
+        "gcloud storage buckets create",
+        `gs://${options.snapshotBucket}`,
+        `--project=${project}`,
+        `--location=${options.region}`,
+        "--uniform-bucket-level-access",
+      ]),
+    });
+
+    for (const object of ["emaff-fude-kagoshima.sqlite", "famic-pesticide-2026.sqlite"]) {
+      const objectCheck = tryGcloud([
+        "storage",
+        "objects",
+        "describe",
+        `gs://${options.snapshotBucket}/${object}`,
+        "--format=value(name,size)",
+      ]);
+      pushResult(results, {
+        name: `GCS snapshot object: ${object}`,
+        ok: objectCheck.ok && objectCheck.out.length > 0,
+        detail: objectCheck.ok ? objectCheck.out : objectCheck.err,
+        fix: `Run: gcloud storage cp snapshots/${object} gs://${options.snapshotBucket}/${object}`,
+      });
+    }
   }
 
   const service = tryGcloud([

@@ -14,8 +14,8 @@
  */
 
 import { existsSync } from "node:fs";
-import { mkdir } from "node:fs/promises";
-import { dirname } from "node:path";
+import { mkdir, readdir } from "node:fs/promises";
+import { dirname, join } from "node:path";
 import { buildEmaffSnapshot } from "./build-emaff.js";
 import { buildFamicSnapshot } from "./build-famic.js";
 
@@ -38,9 +38,9 @@ async function run(): Promise<void> {
   const results: BuilderResult[] = [];
 
   results.push(
-    await tryRun("emaff", () =>
+    await tryRun("emaff", async () =>
       buildEmaffSnapshot({
-        rawPath: "./snapshots/raw/emaff-fude-kagoshima.geojson",
+        rawPaths: await resolveEmaffRawPaths(),
         outPath: "./snapshots/emaff-fude-kagoshima.sqlite",
       }),
     ),
@@ -62,6 +62,21 @@ async function run(): Promise<void> {
   if (results.some((r) => r.status === "failed")) {
     process.exitCode = 1;
   }
+}
+
+async function resolveEmaffRawPaths(): Promise<string[]> {
+  const singleFile = "./snapshots/raw/emaff-fude-kagoshima.geojson";
+  if (existsSync(singleFile)) return [singleFile];
+
+  const extractedDir = "./snapshots/raw/emaff-fude-kagoshima";
+  if (!existsSync(extractedDir)) return [singleFile];
+
+  const entries = await readdir(extractedDir);
+  const files = entries
+    .filter((entry) => entry.endsWith(".geojson") || entry.endsWith(".json"))
+    .sort()
+    .map((entry) => join(extractedDir, entry));
+  return files.length > 0 ? files : [singleFile];
 }
 
 async function tryRun(name: string, fn: () => Promise<BuilderResult>): Promise<BuilderResult> {

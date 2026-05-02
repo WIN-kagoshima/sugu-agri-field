@@ -87,7 +87,7 @@ export class JmaWarningAdapter implements JmaAdapter {
       res = await this.fetchImpl(this.feedUrl, {
         headers: {
           accept: "application/atom+xml, application/xml;q=0.9",
-          "user-agent": "agriops-mcp/0.5.0 (+https://github.com/WIN-kagoshima/agriops-mcp)",
+          "user-agent": "agriops-mcp/0.5.1 (+https://github.com/WIN-kagoshima/agriops-mcp)",
         },
       });
     } catch (err) {

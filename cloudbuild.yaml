@@ -1,4 +1,17 @@
 steps:
+  - id: restore-snapshots
+    name: gcr.io/google.com/cloudsdktool/cloud-sdk:slim
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        if [ -z "$_SNAPSHOT_BUCKET" ]; then
+          echo "No _SNAPSHOT_BUCKET set; using snapshots already present in the build context."
+          exit 0
+        fi
+        mkdir -p snapshots
+        gcloud storage cp "gs://$_SNAPSHOT_BUCKET/emaff-fude-kagoshima.sqlite" snapshots/emaff-fude-kagoshima.sqlite
+        gcloud storage cp "gs://$_SNAPSHOT_BUCKET/famic-pesticide-2026.sqlite" snapshots/famic-pesticide-2026.sqlite
   - id: build
     name: gcr.io/cloud-builders/docker
     args:
@@ -23,7 +36,6 @@ steps:
       - --image=$_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
       - --region=$_REGION
       - --platform=managed
-      - --allow-unauthenticated
       - --service-account=$_SERVICE_ACCOUNT
       - --min-instances=0
       - --max-instances=10
@@ -42,6 +54,7 @@ substitutions:
   _SERVICE_ACCOUNT: agriops-runtime@${PROJECT_ID}.iam.gserviceaccount.com
   _TOKEN_ENC_SECRET: agriops-token-enc-key
   _SESSION_COOKIE_SECRET: agriops-session-cookie-secret
+  _SNAPSHOT_BUCKET: ""
 images:
   - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:$BUILD_ID
   - $_REGION-docker.pkg.dev/$PROJECT_ID/$_REPO/agriops-mcp:latest

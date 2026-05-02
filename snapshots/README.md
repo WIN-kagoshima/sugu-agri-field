@@ -12,7 +12,7 @@ See [scripts/build-snapshots/](../scripts/build-snapshots/) for the build steps 
 
 Raw inputs go under `snapshots/raw/` and are ignored by git and Cloud Build:
 
-- `emaff-fude-kagoshima.geojson`: download manually from the official eMAFF Fude Polygon site after completing the required questionnaire.
+- `emaff-fude-kagoshima.geojson` or `emaff-fude-kagoshima/*.json`: download manually from the official eMAFF Fude Polygon site after completing the required questionnaire.
 - `famic-pesticide.csv`: optional normalized CSV. If absent, the builder also accepts official FAMIC `R*.csv` files extracted under `snapshots/raw/famic*/`.
 
 ## Files produced

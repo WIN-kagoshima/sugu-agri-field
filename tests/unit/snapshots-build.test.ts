@@ -68,6 +68,28 @@ describe("snapshot builders", () => {
     expect(result.message).toMatch(/open\.fude\.maff\.go\.jp/);
   });
 
+  it("builds one eMAFF snapshot from multiple prefecture GeoJSON files", async () => {
+    const out = join(tmpDir, "emaff-multi.sqlite");
+    await mkdir(tmpDir, { recursive: true });
+
+    const result = await buildEmaffSnapshot({
+      rawPaths: [
+        "tests/fixtures/sample-emaff.geojson",
+        "tests/fixtures/sample-emaff-official-od.geojson",
+      ],
+      outPath: out,
+    });
+    expect(result.status).toBe("ok");
+
+    const db = new Database(out, { readonly: true });
+    try {
+      const count = (db.prepare("SELECT COUNT(*) AS n FROM field").get() as { n: number }).n;
+      expect(count).toBe(4);
+    } finally {
+      db.close();
+    }
+  });
+
   it("builds an eMAFF snapshot from official OD property names", async () => {
     const out = join(tmpDir, "emaff-official.sqlite");
     await mkdir(tmpDir, { recursive: true });

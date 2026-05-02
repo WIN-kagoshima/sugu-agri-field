@@ -21,6 +21,9 @@ env:
   REGION: asia-northeast1
   REPOSITORY: agriops-mcp
   SERVICE: agriops-mcp
+  MCP_BASE_URL: ${{ secrets.MCP_BASE_URL }}
+  GCP_RUNTIME_SERVICE_ACCOUNT: ${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }}
+  SNAPSHOT_BUCKET: ${{ secrets.SNAPSHOT_BUCKET }}
 
 jobs:
   deploy:
@@ -37,6 +40,13 @@ jobs:
           node-version: 20
           cache: npm
 
+      - name: Validate deployment inputs
+        run: |
+          test -n "$PROJECT_ID"
+          test -n "$MCP_BASE_URL"
+          test -n "$GCP_RUNTIME_SERVICE_ACCOUNT"
+          test -n "$SNAPSHOT_BUCKET"
+
       - name: Authenticate to Google Cloud (Workload Identity Federation)
         uses: google-github-actions/auth@v2
         with:
@@ -49,6 +59,14 @@ jobs:
       - name: Install smoke-test dependencies
         run: npm ci --ignore-scripts
 
+      - name: Run deploy preflight
+        run: |
+          npm run deploy:preflight -- \
+            --project="$PROJECT_ID" \
+            --region="$REGION" \
+            --runtime-service-account="$GCP_RUNTIME_SERVICE_ACCOUNT" \
+            --snapshot-bucket="$SNAPSHOT_BUCKET"
+
       - name: Configure docker for Artifact Registry
         run: gcloud auth configure-docker $REGION-docker.pkg.dev --quiet
 
@@ -57,7 +75,7 @@ jobs:
           gcloud builds submit \
             --config=cloudbuild.yaml \
             --project=$PROJECT_ID \
-            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=${{ secrets.MCP_BASE_URL }},_SERVICE_ACCOUNT=${{ secrets.GCP_RUNTIME_SERVICE_ACCOUNT }},_TOKEN_ENC_SECRET=agriops-token-enc-key,_SESSION_COOKIE_SECRET=agriops-session-cookie-secret \
+            --substitutions=_REGION=$REGION,_REPO=$REPOSITORY,_MCP_BASE_URL=$MCP_BASE_URL,_SERVICE_ACCOUNT=$GCP_RUNTIME_SERVICE_ACCOUNT,_TOKEN_ENC_SECRET=agriops-token-enc-key,_SESSION_COOKIE_SECRET=agriops-session-cookie-secret,_SNAPSHOT_BUCKET=$SNAPSHOT_BUCKET \
             --region=$REGION
 
       - name: Print Cloud Run URL
@@ -69,7 +87,6 @@ jobs:
         run: |
           TOKEN="$(gcloud auth print-identity-token)"
           npm run deploy:smoke -- \
-            --base-url="${{ secrets.MCP_BASE_URL }}" \
+            --base-url="$MCP_BASE_URL" \
             --health-path=/livez \
-            --allow-not-ready \
             --auth-bearer="$TOKEN"
