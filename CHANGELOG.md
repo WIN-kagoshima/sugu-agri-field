@@ -9,6 +9,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 ## [Unreleased]
 
 ### Added — snapshot-backed production deploys
+- Added `npm run release:check`, a release-readiness gate that validates package/tag/changelog consistency and `npm pack --dry-run` contents before publishing a GitHub Release.
 - Added `.github/workflows/production-smoke.yml`, an hourly/manual production smoke workflow that mints a Cloud Run ID token through Workload Identity Federation and runs `deploy:smoke` against the IAM-protected service.
 - Cloud Build can now restore baked SQLite snapshots from a GCS bucket before building the Cloud Run image, so GitHub Actions deploys stay `/readyz`-clean without committing generated database files.
 - GitHub Actions deploys require `SNAPSHOT_BUCKET`, run `npm run deploy:preflight` before Cloud Build, and no longer pass `--allow-not-ready` to the deployment smoke test.
@@ -22,6 +23,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - The JMA User-Agent now matches the package version.
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- The release workflow now fails fast when a tag has no matching `CHANGELOG.md` section, preventing empty GitHub Release notes.
 - `deploy:smoke` now validates live MCP `tools/list`, `prompts/list`, and `resources/list` in addition to `/livez`, `/readyz`, the Server Card, and `initialize`.
 - `deploy:preflight` now checks deployer IAM for runtime `actAs`, Cloud Build worker `actAs`, self Token Creator for Cloud Run ID-token minting, and private Cloud Run `roles/run.invoker`.
 - The runbook now records the first verified production baseline (Cloud Run URL, revision, image tag/digest, and smoke status), rollback inspection commands, scheduled smoke monitoring, and legacy `sugu-agri-*` cleanup candidates.

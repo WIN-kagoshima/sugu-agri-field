@@ -400,11 +400,15 @@ npm run typecheck
 npm test            # unit + smoke + conformance + secret-leakage
 npm run test:ui     # Playwright dashboard tests
 npm run inspector   # interactive verification
-npm pack --dry-run  # verify tarball contents
+npm run build:all
+npm run release:check -- --tag v$(node -p "require('./package.json').version")
 ```
 
-CI runs all of the above plus CodeQL and OSSF Scorecard on a weekly
-schedule. The release workflow re-runs everything on the tag.
+`release:check` verifies that `CHANGELOG.md` has release notes for the package
+version, the optional tag matches `package.json`, and `npm pack --dry-run`
+contains the expected docs/examples/runtime artifacts without raw snapshots or
+source/test files. CI runs the core checks plus CodeQL and OSSF Scorecard on a
+weekly schedule. The release workflow re-runs the release check on the tag.
 
 ---
 

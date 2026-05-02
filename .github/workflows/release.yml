@@ -58,6 +58,9 @@ jobs:
       - name: Build UI bundle
         run: npm run build:ui
 
+      - name: Release readiness check
+        run: npm run release:check -- --tag "$GITHUB_REF_NAME"
+
       - name: Test
         run: npm test
 
@@ -70,6 +73,10 @@ jobs:
             found && /^## \[/        { exit }
             found                    { print }
           ' CHANGELOG.md)
+          test -n "$(printf '%s' "$notes" | tr -d '[:space:]')" || {
+            echo "::error::CHANGELOG.md has no release notes for $GITHUB_REF_NAME"
+            exit 1
+          }
           {
             echo "notes<<EOF"
             echo "$notes"
