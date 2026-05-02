@@ -21,6 +21,7 @@ Pre-`1.0.0` releases are explicitly **experimental**: tool names, input/output s
 - The JMA User-Agent now matches the package version.
 
 ### Fixed — Cloud Build / Cloud Run deploy path
+- GitHub Actions deploys now use **global Cloud Build** instead of regional Cloud Build (`--region=$REGION` removed from `gcloud builds submit`) and pin the source staging dir to `gs://${PROJECT}_cloudbuild/source`. Regional builds rely on a per-region staging bucket (`gs://${PROJECT}_${REGION}_cloudbuild`) that least-privilege deployer SAs do not own, which surfaced as `serviceusage.services.use` "forbidden from accessing the bucket" errors. Cloud Run itself is still deployed in `asia-northeast1` because `cloudbuild.yaml` passes `--region=$_REGION` to `gcloud run deploy`.
 - `deploy:preflight` now downgrades the GCS bucket existence check to a `[WARN]` (instead of `[FAIL]`) when the deployer service account can read every required snapshot object but lacks `storage.buckets.get` on the bucket itself. Cloud Build's `restore-snapshots` step only needs object reads, so this avoids spurious deployment-blocking failures on least-privilege deployers.
 - `deploy:preflight` and `deploy:smoke` now trim whitespace and CR/LF from CLI argument values, and the deploy workflow strips trailing newlines from secrets before invoking `gcloud`/preflight, preventing failures when GitHub Secrets are pasted with stray newlines.
 - Documented the authenticated Cloud Scheduler `/livez` synthetic monitor used while organization policy blocks public Cloud Run invocation.

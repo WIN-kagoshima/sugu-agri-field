@@ -94,8 +94,14 @@ gcloud artifacts repositories create agriops-mcp \
 gcloud builds submit \
   --config cloudbuild.yaml \
   --project=${PROJECT} \
-  --region=asia-northeast1 \
+  --gcs-source-staging-dir="gs://${PROJECT}_cloudbuild/source" \
   --substitutions=_MCP_BASE_URL=https://mcp.agriops.example.com
+# NOTE: deliberately omit --region for `builds submit`. Regional Cloud Build
+# uses gs://${PROJECT}_${REGION}_cloudbuild as the staging bucket, which org
+# policy and least-privilege deployer SAs may not own. Global Cloud Build
+# reuses gs://${PROJECT}_cloudbuild that we already configured. Cloud Run
+# itself is still deployed in asia-northeast1 because cloudbuild.yaml passes
+# --region=$_REGION to `gcloud run deploy`.
 
 gcloud run deploy agriops-mcp \
   --image=asia-northeast1-docker.pkg.dev/${PROJECT}/agriops-mcp/agriops-mcp:latest \
