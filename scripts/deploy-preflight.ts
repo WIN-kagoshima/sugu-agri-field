@@ -37,6 +37,7 @@ function parseArgs(argv: string[]): Options {
   };
   for (let i = 0; i < argv.length; i++) {
     const arg = argv[i];
+    if (arg === undefined) continue;
     if (arg === "--help" || arg === "-h") {
       printHelp();
       process.exit(0);
@@ -45,41 +46,42 @@ function parseArgs(argv: string[]): Options {
       options.skipBilling = true;
       continue;
     }
-    const next = argv[i + 1];
+    const [key, inlineValue] = arg.split("=", 2);
+    const next = inlineValue ?? argv[i + 1];
     if (!next || next.startsWith("--")) {
-      throw new Error(`Missing value for ${arg}`);
+      throw new Error(`Missing value for ${key}`);
     }
-    switch (arg) {
+    switch (key) {
       case "--project":
         options.project = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--region":
         options.region = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--repo":
         options.repository = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--runtime-service-account":
         options.runtimeServiceAccount = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--token-secret":
         options.tokenSecret = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--session-secret":
         options.sessionSecret = next;
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       case "--snapshot-bucket":
         options.snapshotBucket = next.replace(/^gs:\/\//, "").replace(/\/+$/, "");
-        i++;
+        if (inlineValue === undefined) i++;
         break;
       default:
-        throw new Error(`Unknown argument: ${arg}`);
+        throw new Error(`Unknown argument: ${key}`);
     }
   }
   return options;
