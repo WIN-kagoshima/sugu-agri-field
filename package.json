@@ -78,7 +78,7 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.4",
-    "@modelcontextprotocol/inspector": "^1.0.0",
+    "@modelcontextprotocol/inspector": "^2.5.0",
     "@playwright/test": "^1.49.0",
     "@types/better-sqlite3": "^7.6.12",
     "@types/cookie-parser": "^1.4.7",
