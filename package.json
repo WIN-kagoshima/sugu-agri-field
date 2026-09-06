@@ -88,7 +88,7 @@
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.1",
     "fast-check": "^4.9.0",
-    "maplibre-gl": "^5.24.0",
+    "maplibre-gl": "^6.7.0",
     "msw": "^2.6.0",
     "react": "19.2.6",
     "react-dom": "19.2.6",
